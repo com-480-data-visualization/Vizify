@@ -4,7 +4,7 @@
 | -------------- | ------ |
 | Imane Lahrichi| 360854 |
 | Imane Raihane| 362230 |
-| Victor Zablocki | |
+| Victor Zablocki | 361602 |
 
 [Milestone 1](#milestone-1) • [Milestone 2](#milestone-2) • [Milestone 3](#milestone-3)
 
