@@ -28,11 +28,11 @@ YouTube's Trending page appears algorithmic and based on meritocracy, but it has
 
 Rather than observing what is currently popular, this project aims to study the design behind virality: the patterns in how trending videos are made and whether some content niches have found more effective formulas (maybe specific to their category) than others.
 
-The main axis of investigation is the relationship between metadata strategy and engagement performance, broken down by content sub-genre. This encompasses several interconnected questions. First, do trending videos follow naming conventions such as clickbait, emojis, caps lock, or general sentiment, and does this vary by niche? Same for tag and keyword "omnipresence", specifically, whether or not some "high-performing" niches rely on specific keyword strategies. 
+The core question is the "does how you describe a video actually change how it performs, and does that depend on what kind of content you make?". This contains several interconnected questions. First, do trending videos follow naming conventions such as clickbait, emojis, caps lock, or general sentiment, and does this vary by niche? Same for tag and keyword "omnipresence", specifically, whether or not some "high-performing" niches rely on specific keyword strategies. 
 
 We also ask whether certain metadata combinations, such as tag count, title length, or publish hour, correlate with stronger visibility. And finally, we want to look at sub-genre: beyond YouTube's built-in categories, which specific niches go above average on Trending relative to their volume?
 
-This work is primarily aimed at content creators and influencers searching for optimization tips, as well as media and communication students studying how platform algorithms shape creative decisions.
+This work is aimed at content creators and influencers searching for optimization tips, as well as media and communication students studying how platform algorithms shape creative decisions.
 
 ### Exploratory Data Analysis
 
@@ -46,7 +46,7 @@ Gaming is the largest category by volume (about 76k rows).
 
 #### What others have already done with the data?
 
-Existing work on YouTube trending video datasets typically follows several distinct approaches.
+Existing work on YouTube trending video datasets typically follows two distinct approaches.
 
 Some studies focus on exploratory data analysis. For example, the Kaggle notebook [Exploratory Data Analysis of YouTube Trending Videos](https://www.kaggle.com/code/hoonkeng/deep-analysis-on-youtube-trending-videos-eda) examines the distribution of views, likes, and comments, and highlights correlations between engagement metrics. This type of work provides a general overview of the dataset and helps identify common statistical patterns.
 
@@ -58,17 +58,17 @@ Overall, prior work mainly focuses on describing patterns in the data or predict
 
 #### Why is your approach original?
 
-Despite all studies conducted on this dataset, a consistent gap remains: metadata is generally treated as an outcome descriptor rather than as the result of intentional creator behavior. Instead of focusing on what trending videos look like, we focus on how YouTube creators deliberately craft their titles, tags, and descriptions to maximize their visibility.
+Despite all studies conducted on this dataset, a consistent gap remains: metadata is generally treated as an "outcome" rather than as the result of intentional creator behavior. Instead of focusing on what trending videos look like, we focus on how YouTube creators deliberately design their titles, tags, and descriptions to maximize their visibility.
 
 Rather than only comparing engagement outcomes across categories, we shift the focus toward the strategies behind metadata design. In addition, our approach extends beyond static analysis by incorporating temporal dynamics, allowing us to study how videos become trending over time.
 
 We also go further by examining whether engagement plays a causal role in visibility, rather than relying only on correlations, and by exploring potential biases and anomalies in the system.
 
-This combination of strategic, temporal, and critical perspectives provides a more complete and less explored understanding of virality.
+Altogether, these studies give an oversight on what makes the algorithm decide to make a video viral, and not "what" goes viral.
 
 #### What source of inspiration do you take? Visualizations that you found on other websites or magazines (might be unrelated to your data).
 
-We take inspiration from simple and effective visualizations used in common platforms like FiveThirtyEight, The Economist, and Kaggle. In particular, we rely on time-series plots to show how trends evolve, bar charts to compare categories or countries, and scatter plots to detect unusual patterns.
+We take inspiration from simple visualizations used in common platforms like FiveThirtyEight, The Economist, and Kaggle. In particular, we rely on bar charts to compare categories or countries, and scatter plots to detect unusual patterns and semantic grouping of the metadata.
 
 Our goal is to use visuals that highlight evolution, differences, and anomalies, rather than only static summaries.
 
