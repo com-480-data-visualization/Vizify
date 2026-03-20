@@ -23,35 +23,16 @@ https://www.kaggle.com/datasets/bsthere/youtube-trending-videos-stats-2026
 
 ### Problematic
 
-#### How do YouTubers design video metadata to maximize their visibility, and how do these strategies interact with the way videos become trending over time? Do certain content niches exploit these mechanisms more effectively, and is visibility influenced by engagement, bias, or irregular patterns?
+#### How do YouTubers write video metadata to maximize their visibility on the app, and do certain content niches exploit this better than others ? 
+YouTube's Trending page appears algorithmic and based on meritocracy, but it has been shown that optimization is real and can play a big part in the virality of today's content. **Titles**, **tags**, **publish times** and other metadata are carefully chosen. 
 
-### Topic and Motivation
+Rather than observing what is currently popular, this project aims to study the design behind virality: the patterns in how trending videos are made and whether some content niches have found more effective formulas (maybe specific to their category) than others.
 
-YouTube's Trending page appears algorithmic and based on meritocraty, but it has been shown that optimization is real and can play a big part in the virality of today's content. Titles, tags, publish times and other metdata are carefully chosen. Rather than observing what is currently popular or focus on their static characteristics, this project has for goal to study the design behind virality : the patterns in how trending videos are made and whether some content niches have found more effective formulas (maybe specific to their category) than others, and we are even going further by analyzing how trends emerge over time, whether engagement has a direct causal impact on visibility, and whether the system exhibits bias or irregular or unfair patterns. This allows us to move from a descriptive approach to a more dynamic and critical understanding of virality.
+The main axis of investigation is the relationship between metadata strategy and engagement performance, broken down by content sub-genre. This encompasses several interconnected questions. First, do trending videos follow naming conventions such as clickbait, emojis, caps lock, or general sentiment, and does this vary by niche? Same for tag and keyword "omnipresence", specifically, whether or not some "high-performing" niches rely on specific keyword strategies. 
 
-### What am we trying to show?
+We also ask whether certain metadata combinations, such as tag count, title length, or publish hour, correlate with stronger visibility. And finally, we want to look at sub-genre: beyond YouTube's built-in categories, which specific niches go above average on Trending relative to their volume?
 
-The main axis is the relationship between metadata strategy and engagement performance, broken down by content sub-genre. Specifically:
-
-**Title writing conventions** : Do trending videos follow naming conventions (clickbait, emojis, caps lock, general sentiment, questions)? Does this vary by niche?
-
-**Tag and keyword clusters** : Do high-performing niches have hidden keyword strategies?
-
-**Metadata combination** : Can we identify combinations (tag count, title length, publish hour) that correlate with stronger visibility.
-
-**Sub-genre** : Beyond youtube built-in categories, which specific niches goes above average on Trending relative to their volume?
-
-**Temporal dynamics** : How fast do videos become trending? How do views, likes and comments evolve over time? 
-
-**Causality vs correlation** : Does engagement (likes, comments) actually contribute to visibility, or is it only correlated with it?
-
-**Bias & fairness** : Are certain categories systematically over-represented or favored in Trending?
-
-**Anomaly detection** : Can we identify videos with unusual patterns suggesting atypical behavior or algorithmic effects?
-
-### Target Audience
-
-Content creators / influencers searching for optimization tips, media & communication students studying how platform algorithms shapes the creative decisions, how trends emerge but also whether visibility is fairly distributed .
+This work is primarily aimed at content creators and influencers searching for optimization tips, as well as media and communication students studying how platform algorithms shape creative decisions.
 
 ### Exploratory Data Analysis
 
