@@ -21,6 +21,8 @@ Please, fill the following sections about your project.
 
 [Youtube Trending videos stats 2026](https://www.kaggle.com/datasets/bsthere/youtube-trending-videos-stats-2026)
 
+The dataset comes from Kaggle, thus it’s already reliable and easy to use without any need for scraping. Overall, it is quite clean, with very few missing values, mostly in non-essential fields like the description. This means only minimal preprocessing is needed (mainly handling a few missing entries), allowing us to focus more on analysis and visualization rather than heavy data cleaning.
+
 ### Problematic
 
 #### How do YouTubers write video metadata to maximize their visibility on the app, and do certain content niches exploit this better than others ? 
@@ -40,6 +42,12 @@ There's 178,399 rows, from 11 different countries. The typical trending video ge
 The youtube categories with highest median views are Pets & Animals, Comedy, Nonprofits & Activism.
 The top 10 most viewed videos amongst the trending video in early 2026 are all music videos (half of them song from Gorillaz or T.I.)
 Gaming is the largest category by volume (about 76k rows).
+To explore this further, we visualize the relationship between views and likes:
+
+<img width="800" height="600" alt="Figure_1" src="https://github.com/user-attachments/assets/6e447495-3f4f-460c-ba89-9922ae76aae6" />
+
+
+This plot highlights a strong positive relationship between views and likes, but also reveals some outliers with unusual engagement patterns. These observations motivate further analysis of this dataset.
 
 ### Related work
 
