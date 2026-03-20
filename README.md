@@ -25,14 +25,23 @@ Please, fill the following sections about your project.
 
 ### Problematic
 
-> Frame the general topic of your visualization and the main axis that you want to develop.
-> - What am I trying to show with my visualization?
-> - Think of an overview for the project, your motivation, and the target audience.
+#### How do YouTubers write video metadata to maximize their visibility on the app, and do certain content niches exploit this better than others ? 
+YouTube's Trending page appears algorithmic and based on meritocracy, but it has been shown that optimization is real and can play a big part in the virality of today's content. **Titles**, **tags**, **publish times** and other metadata are carefully chosen. 
+
+Rather than observing what is currently popular, this project aims to study the design behind virality: the patterns in how trending videos are made and whether some content niches have found more effective formulas (maybe specific to their category) than others.
+
+The main axis of investigation is the relationship between metadata strategy and engagement performance, broken down by content sub-genre. This encompasses several interconnected questions. First, do trending videos follow naming conventions such as clickbait, emojis, caps lock, or general sentiment, and does this vary by niche? Same for tag and keyword "omnipresence", specifically, whether or not some "high-performing" niches rely on specific keyword strategies. 
+
+We also ask whether certain metadata combinations, such as tag count, title length, or publish hour, correlate with stronger visibility. And finally, we want to look at sub-genre: beyond YouTube's built-in categories, which specific niches go above average on Trending relative to their volume?
+
+This work is primarily aimed at content creators and influencers searching for optimization tips, as well as media and communication students studying how platform algorithms shape creative decisions.
 
 ### Exploratory Data Analysis
 
-> Pre-processing of the data set you chose
-> - Show some basic statistics and get insights about the data
+There's 178,399 rows, from 11 different countries. The typical trending video gets around 231,191 views. Countries with the highest median like-rate are Russia, Brasil, Germany and the United States.
+The youtube categories with highest median views are Pets & Animals, Comedy, Nonprofits & Activism.
+The top 10 most viewed videos amongst the trending video in early 2026 are all music videos (half of them song from Gorillaz or T.I.)
+Gaming is the largest category by volume (about 76k rows).
 
 ### Related work
 
