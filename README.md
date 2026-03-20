@@ -19,9 +19,7 @@ Please, fill the following sections about your project.
 
 ### Dataset
 
-> Find a dataset (or multiple) that you will explore. Assess the quality of the data it contains and how much preprocessing / data-cleaning it will require before tackling visualization. We recommend using a standard dataset as this course is not about scraping nor data processing.
->
-> Hint: some good pointers for finding quality publicly available datasets ([Google dataset search](https://datasetsearch.research.google.com/), [Kaggle](https://www.kaggle.com/datasets), [OpenSwissData](https://opendata.swiss/en/), [SNAP](https://snap.stanford.edu/data/) and [FiveThirtyEight](https://data.fivethirtyeight.com/)).
+https://www.kaggle.com/datasets/bsthere/youtube-trending-videos-stats-2026
 
 ### Problematic
 
@@ -46,10 +44,40 @@ Gaming is the largest category by volume (about 76k rows).
 ### Related work
 
 
-> - What others have already done with the data?
-> - Why is your approach original?
-> - What source of inspiration do you take? Visualizations that you found on other websites or magazines (might be unrelated to your data).
-> - In case you are using a dataset that you have already explored in another context (ML or ADA course, semester project...), you are required to share the report of that work to outline the differences with the submission for this class.
+#### What others have already done with the data?
+
+Existing work on YouTube trending video datasets typically follows several distinct approaches.
+
+Some studies focus on exploratory data analysis. For example, the Kaggle notebook [Exploratory Data Analysis of YouTube Trending Videos](https://www.kaggle.com/code/hoonkeng/deep-analysis-on-youtube-trending-videos-eda) examines the distribution of views, likes, and comments, and highlights correlations between engagement metrics. This type of work provides a general overview of the dataset and helps identify common statistical patterns.
+
+Other approaches rely on machine learning models to predict video performance. The project [Machine Learning Project: YouTube Trending Analysis](https://github.com/GateraGael/Machine-Learning-Project-Youtube-Trend-Analysis) uses metadata features such as title, category, and engagement variables to build predictive models of video popularity.
+
+Additional works explore category performance, posting time effects, or sentiment analysis on titles and tags. These studies aim to identify patterns associated with higher engagement or visibility, often using statistical analysis.
+
+Overall, prior work mainly focuses on describing patterns in the data or predicting outcomes based on available features.
+
+#### Why is your approach original?
+
+Despite all studies conducted on this dataset, a consistent gap remains: metadata is generally treated as an outcome descriptor rather than as the result of intentional creator behavior. Instead of focusing on what trending videos look like, we focus on how YouTube creators deliberately craft their titles, tags, and descriptions to maximize their visibility.
+
+Rather than only comparing engagement outcomes across categories, we shift the focus toward the strategies behind metadata design. In addition, our approach extends beyond static analysis by incorporating temporal dynamics, allowing us to study how videos become trending over time.
+
+We also go further by examining whether engagement plays a causal role in visibility, rather than relying only on correlations, and by exploring potential biases and anomalies in the system.
+
+This combination of strategic, temporal, and critical perspectives provides a more complete and less explored understanding of virality.
+
+#### What source of inspiration do you take? Visualizations that you found on other websites or magazines (might be unrelated to your data).
+
+We take inspiration from simple and effective visualizations used in common platforms like FiveThirtyEight, The Economist, and Kaggle. In particular, we rely on time-series plots to show how trends evolve, bar charts to compare categories or countries, and scatter plots to detect unusual patterns.
+
+Our goal is to use visuals that highlight evolution, differences, and anomalies, rather than only static summaries.
+
+<img width="1361" height="683" alt="1_xRwFyfv9GeB4rUbCIuiDqw" src="https://github.com/user-attachments/assets/60e39899-c80c-48d5-a487-a5cdc405e21a" />
+
+
+#### In case you are using a dataset that you have already explored in another context (ML or ADA course, semester project...), you are required to share the report of that work to outline the differences with the submission for this class.
+
+We are using a newer dataset, we haven't worked with before.
 
 ## Milestone 2 (17th April, 5pm)
 
