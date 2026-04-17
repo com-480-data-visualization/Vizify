@@ -4,7 +4,7 @@ export function FilterPanel() {
       <div className="filter-panel-header">
         <p className="section-kicker">Controls</p>
         <h3>Filter panel</h3>
-        <p>Skeleton UI for future dataset filtering and dashboard coordination.</p>
+        <p>Basic skeleton UI for the dashboard filters.</p>
       </div>
 
       <form className="filter-form">
@@ -51,8 +51,8 @@ export function FilterPanel() {
       </form>
 
       <p className="filter-note">
-        {/* Future filter state and dataset queries should be connected in this panel. */}
-        Future logic: shared state, dataset loading, and coordinated chart updates.
+        {/*TODO LATER*/}
+        TODO LATER : data loading and coordinated chart updates.
       </p>
     </div>
   );

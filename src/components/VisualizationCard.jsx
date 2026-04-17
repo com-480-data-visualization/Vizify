@@ -16,8 +16,8 @@ export function VisualizationCard({ title, description }) {
       </div>
 
       <p className="implementation-note">
-        {/* Dataset loading, D3 chart mount point, and linked interactions will be added here. */}
-        Reserved for future data-driven rendering and interactive chart behavior.
+        {/*TODO LATER*/}
+        Placeholder for future dynamic charts and other visualizations.
       </p>
     </article>
   );

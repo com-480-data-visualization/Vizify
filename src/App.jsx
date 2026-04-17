@@ -1,14 +1,12 @@
 import { FilterPanel } from "./components/FilterPanel";
-import { InfoCard } from "./components/InfoCard";
 import { SectionShell } from "./components/SectionShell";
-import { StackItem } from "./components/StackItem";
 import { VisualizationCard } from "./components/VisualizationCard";
 
 const keyQuestions = [
-  "Which title patterns appear most often in high-performing videos?",
+  "What kind of title patterns appear most often in trending videos?",
   "Do some categories exploit metadata better than others?",
   "Does publish time matter?",
-  "Are there outliers with unusual engagement patterns?",
+  "Are there outliers that get unusual engagement?",
 ];
 
 const visualizations = [
@@ -33,25 +31,47 @@ const visualizations = [
 const informationCards = [
   {
     title: "MVP",
-    body: "A functional dashboard with one global performance view, one comparison view, and a first layer of simple filters.",
+    body: "A working dashboard where you can see overall performance, compare videos, and use filters.",
   },
   {
     title: "Interactions",
-    body: "Hover, brushing, clicking, filtering, and details on demand will connect the overview to more specific slices of the dataset.",
+    body: "You'll be able to hover, click, and filter to go down from the global picture into specific data points.",
   },
   {
     title: "Extensions",
-    body: "Possible next layers include NLP on titles, clickbait detection, metadata scoring, and animated transitions between views.",
+    body: "Later on, we might add things like title analysis, clickbait detection, and smooth animations between charts.",
   },
 ];
 
-const stack = ["D3.js", "React", "HTML/CSS", "JavaScript"];
+const stack = ["D3.js", "React", "HTML/CSS", "JavaScript", "Vite", "Vercel"];
+
+const analysis = [
+  "TBD: Analysis method/library placeholder",
+  "TBD: Analysis method/library placeholder",
+  "TBD: Analysis method/library placeholder",
+  "TBD: Analysis method/library placeholder",
+];
 
 const teamMembers = [
   { name: "Imane Lahrichi", sciper: "360854" },
   { name: "Imane Raihane", sciper: "362230" },
   { name: "Victor Zablocki", sciper: "361602" },
 ];
+
+function ItemGrid({ label, items }) {
+  return (
+    <div className="method-column">
+      <p className="method-right-label">{label}</p>
+      <div className="stack-grid">
+        {items.map((item) => (
+          <div className="stack-item card-surface" key={item}>
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -69,7 +89,6 @@ function App() {
           <a href="#overview">Overview</a>
           <a href="#dashboard">Dashboard</a>
           <a href="#method">Method</a>
-          <a href="#prototype">Prototype</a>
         </nav>
       </header>
 
@@ -79,9 +98,9 @@ function App() {
             <p className="section-kicker">Overview</p>
             <h2>How do YouTubers optimize metadata to reach the trending page?</h2>
             <p className="hero-text">
-              This prototype frames the project as an exploration of creator behavior:
+              This prototype frames the project as an analysis of creator behavior:
               titles, tags, categories, publish timing, and engagement patterns that may
-              shape visibility across countries and content niches.
+              influence visibility across countries and content niches.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href="#dashboard">
@@ -96,27 +115,27 @@ function App() {
           <div className="hero-panel">
             <div className="panel-badge">Research framing</div>
             <p>
-              The site is designed to move from overview to comparison, then into more
-              detailed metadata signals and temporal patterns.
+              We start with a global overview, then let you dig into specific comparisons, 
+              metadata signals, and timing trends.
             </p>
             <div className="hero-metrics">
               <div>
+                <span>178,399</span>
+                <p>videos in dataset</p>
+              </div>
+              <div>
+                <span>231K</span>
+                <p>avg. views per trending video</p>
+              </div>
+              <div>
                 <span>11</span>
-                <p>countries in scope</p>
-              </div>
-              <div>
-                <span>4</span>
-                <p>core analysis lenses</p>
-              </div>
-              <div>
-                <span>1</span>
-                <p>extensible dashboard shell</p>
+                <p>countries tracked</p>
               </div>
             </div>
           </div>
         </SectionShell>
 
-        <SectionShell title="Key Questions" subtitle="What the prototype is built to explore.">
+        <SectionShell title="Key Questions">
           <div className="question-grid">
             {keyQuestions.map((question) => (
               <article className="question-card" key={question}>
@@ -127,11 +146,7 @@ function App() {
           </div>
         </SectionShell>
 
-        <SectionShell
-          id="dashboard"
-          title="Dashboard Skeleton"
-          subtitle="UI structure for the future interactive analysis layer."
-        >
+        <SectionShell id="dashboard" title="Dashboard Skeleton">
           <div className="dashboard-layout">
             <aside className="dashboard-sidebar">
               <FilterPanel />
@@ -150,18 +165,17 @@ function App() {
 
               <div className="info-grid">
                 {informationCards.map((card) => (
-                  <InfoCard key={card.title} title={card.title} body={card.body} />
+                  <article className="info-card card-surface" key={card.title}>
+                    <h3>{card.title}</h3>
+                    <p>{card.body}</p>
+                  </article>
                 ))}
               </div>
             </div>
           </div>
         </SectionShell>
 
-        <SectionShell
-          id="method"
-          title="Method and Structure"
-          subtitle="The narrative logic behind the website."
-        >
+        <SectionShell id="method" title="Method and Structure">
           <div className="method-layout">
             <div className="method-copy card-surface">
               <p>
@@ -171,40 +185,19 @@ function App() {
                 or metadata strategies.
               </p>
               <p>
-                Future data loading, filter state, D3 rendering, and linked interactions
-                will plug into this structure without changing the global layout.
+                Once we build the actual logic (loading data, wiring up D3, and making filters work), 
+                it'll just drop right into this layout.
               </p>
             </div>
 
-            <div className="stack-grid">
-              {stack.map((item) => (
-                <StackItem key={item} label={item} />
-              ))}
+            <div className="method-bottom">
+              <ItemGrid label="Tech stack" items={stack} />
+              <ItemGrid label="Analysis" items={analysis} />
             </div>
           </div>
         </SectionShell>
 
-        <SectionShell
-          id="prototype"
-          title="Prototype Status"
-          subtitle="Current state of the milestone prototype."
-        >
-          <div className="status-card card-surface">
-            <p>
-              This is the initial prototype skeleton. The layout, sections, filter panel,
-              and visualization placeholders are ready.
-            </p>
-            <p>
-              The next step is to connect the dataset and replace the placeholders with
-              real D3 charts, wired to shared filter state and linked interactions.
-            </p>
-          </div>
-        </SectionShell>
-
-        <SectionShell
-          title="About Us"
-          subtitle="Project team for COM-480 Data Visualization."
-        >
+        <SectionShell title="About Us">
           <div className="info-grid">
             {teamMembers.map((member) => (
               <article key={member.sciper} className="info-card card-surface">
