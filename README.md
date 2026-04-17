@@ -89,19 +89,7 @@ We are using a newer dataset, we haven't worked with before.
 
 ## Milestone 2 (17th April, 5pm)
 
-**10% of the final grade**
-
-### Prototype website
-
-The repository now includes a first React + Vite website skeleton for the Milestone 2 prototype with some placeholders to include sketches.
-
-Run locally:
-
-```bash
-npm install
-npm run dev
-```
-
+Link to report in repo
 
 
 ## Milestone 3 (29th May, 5pm)
