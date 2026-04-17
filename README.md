@@ -89,7 +89,7 @@ We are using a newer dataset, we haven't worked with before.
 
 ## Milestone 2 (17th April, 5pm)
 
-Link to report in repo
+[Link to report in repo](https://github.com/com-480-data-visualization/Vizify/blob/a1e7be0b0b65123d2009b5ff2285bc3a65c5d855/Report%20Vizify%20MS2%20.pdf)
 
 
 ## Milestone 3 (29th May, 5pm)
