@@ -1,31 +1,17 @@
 import { FilterPanel } from "./components/FilterPanel";
 import { SectionShell } from "./components/SectionShell";
-import { VisualizationCard } from "./components/VisualizationCard";
+import { VizSection } from "./components/VizSection";
+import { HeatmapChart } from "./components/charts/HeatmapChart";
+import { EmojiBarChart } from "./components/charts/EmojiBarChart";
+import { TagBubbleChart } from "./components/charts/TagBubbleChart";
+import { DescriptionChart } from "./components/charts/DescriptionChart";
+import { TitlePatternGrid } from "./components/charts/TitlePatternGrid";
 
 const keyQuestions = [
   "What kind of title patterns appear most often in trending videos?",
   "Do some categories exploit metadata better than others?",
   "Does publish time matter?",
   "Are there outliers that get unusual engagement?",
-];
-
-const visualizations = [
-  {
-    title: "Sketch 1",
-    description: "Placeholder for a future visualization to be defined by the team.",
-  },
-  {
-    title: "Sketch 2",
-    description: "Placeholder for a future visualization to be defined by the team.",
-  },
-  {
-    title: "Sketch 3",
-    description: "Placeholder for a future visualization to be defined by the team.",
-  },
-  {
-    title: "Sketch 4",
-    description: "Placeholder for a future visualization to be defined by the team.",
-  },
 ];
 
 const informationCards = [
@@ -35,21 +21,21 @@ const informationCards = [
   },
   {
     title: "Interactions",
-    body: "You'll be able to hover, click, and filter to go down from the global picture into specific data points.",
+    body: "Hover, click, and filter to move from the global picture into specific data points.",
   },
   {
     title: "Extensions",
-    body: "Later on, we might add things like title analysis, clickbait detection, and smooth animations between charts.",
+    body: "Optional add-ons include description-length analysis, title-pattern growth curves, and subgenre clustering.",
   },
 ];
 
 const stack = ["D3.js", "React", "HTML/CSS", "JavaScript", "Vite", "Vercel"];
 
 const analysis = [
-  "TBD: Analysis method/library placeholder",
-  "TBD: Analysis method/library placeholder",
-  "TBD: Analysis method/library placeholder",
-  "TBD: Analysis method/library placeholder",
+  "Per-category aggregation",
+  "Emoji regex extraction",
+  "Tag-frequency uplift",
+  "Title pattern classification",
 ];
 
 const teamMembers = [
@@ -78,7 +64,7 @@ function App() {
     <div className="app-shell">
       <header className="site-header">
         <div className="brand-block">
-          <p className="eyebrow">COM-480 Milestone 2 Prototype</p>
+          <p className="eyebrow">COM-480 Final Milestone</p>
           <h1>YouTube Trending Metadata Explorer</h1>
           <p className="site-subtitle">
             A visual study of how creators optimize metadata to improve visibility on
@@ -101,13 +87,13 @@ function App() {
             <p className="section-kicker">Overview</p>
             <h2>How do YouTubers optimize metadata to reach the trending page?</h2>
             <p className="hero-text">
-              This prototype frames the project as an analysis of creator behavior:
+              This project frames the analysis around creator behavior:
               titles, tags, categories, publish timing, and engagement patterns that may
               influence visibility across countries and content niches.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href="#dashboard">
-                Explore prototype
+                Explore the data
               </a>
               <a className="button button-secondary" href="#method">
                 Read methodology
@@ -118,7 +104,7 @@ function App() {
           <div className="hero-panel">
             <div className="panel-badge">Research framing</div>
             <p>
-              We start with a global overview, then let you dig into specific comparisons, 
+              We start with a global overview, then let you dig into specific comparisons,
               metadata signals, and timing trends.
             </p>
             <div className="hero-metrics">
@@ -149,31 +135,57 @@ function App() {
           </div>
         </SectionShell>
 
-        <SectionShell id="dashboard" title="Dashboard Skeleton">
+        <SectionShell id="dashboard" title="Explore the data">
           <div className="dashboard-layout">
             <aside className="dashboard-sidebar">
               <FilterPanel />
             </aside>
 
             <div className="dashboard-main">
-              <div className="visualization-grid">
-                {visualizations.map((item) => (
-                  <VisualizationCard
-                    key={item.title}
-                    title={item.title}
-                    description={item.description}
-                  />
-                ))}
-              </div>
+              <VizSection
+                id="viz-time"
+                eyebrow="VIZ 1"
+                title="Best time to go viral"
+                intro="Understand when your audience is most active and how timing influences performance on YouTube."
+              >
+                <HeatmapChart />
+              </VizSection>
 
-              <div className="info-grid">
-                {informationCards.map((card) => (
-                  <article className="info-card card-surface" key={card.title}>
-                    <h3>{card.title}</h3>
-                    <p>{card.body}</p>
-                  </article>
-                ))}
-              </div>
+              <VizSection
+                id="viz-emoji"
+                eyebrow="VIZ 2"
+                title="Boost your views with emojis"
+                intro="Do emojis in titles correlate with stronger visibility - and which styles fit each category?"
+              >
+                <EmojiBarChart />
+              </VizSection>
+
+              <VizSection
+                id="viz-titles"
+                eyebrow="VIZ 3"
+                title="Patterns that lift titles"
+                intro="Each tile shows how often a pattern is used (ring size) and how much it lifts views (fill)."
+              >
+                <TitlePatternGrid />
+              </VizSection>
+
+              <VizSection
+                id="viz-tags"
+                eyebrow="VIZ 4"
+                title="Use tags to increase reach"
+                intro="Which tags actually drive views. Bubble size encodes frequency, color encodes average uplift."
+              >
+                <TagBubbleChart />
+              </VizSection>
+
+              <VizSection
+                id="viz-desc"
+                eyebrow="VIZ 5"
+                title="A better description for more comments"
+                intro="Drag the slider to your description length to see which bucket you fall into and how it compares."
+              >
+                <DescriptionChart />
+              </VizSection>
             </div>
           </div>
         </SectionShell>
@@ -183,13 +195,14 @@ function App() {
             <div className="method-copy card-surface">
               <p>
                 The site follows a progressive analytical logic: overview first to establish
-                the main patterns, zoom and filter to isolate countries, categories, and
-                keyword signals, then details on demand for interpreting specific outliers
-                or metadata strategies.
+                the main patterns, then per-viz filters to isolate categories and content
+                niches, then details on demand for interpreting specific outliers or
+                metadata strategies.
               </p>
               <p>
-                Once we build the actual logic (loading data, wiring up D3, and making filters work), 
-                it'll just drop right into this layout.
+                Charts read from <code>src/data/mockData.js</code> today. The hook in{" "}
+                <code>src/data/useDataset.js</code> swaps to fetching{" "}
+                <code>public/data/*.json</code> once the preprocessing script ships.
               </p>
             </div>
 
@@ -206,6 +219,17 @@ function App() {
               <article key={member.sciper} className="info-card card-surface">
                 <h3>{member.name}</h3>
                 <p>SCIPER: {member.sciper}</p>
+              </article>
+            ))}
+          </div>
+        </SectionShell>
+
+        <SectionShell title="Project Direction">
+          <div className="info-grid">
+            {informationCards.map((card) => (
+              <article className="info-card card-surface" key={card.title}>
+                <h3>{card.title}</h3>
+                <p>{card.body}</p>
               </article>
             ))}
           </div>

@@ -1,58 +1,58 @@
+import { useFilters } from "../data/filterStore";
+import { CATEGORIES, COUNTRIES } from "../data/constants";
+
 export function FilterPanel() {
+  const { category, country, search, setCategory, setCountry, setSearch, reset } = useFilters();
+
   return (
     <div className="filter-panel card-surface">
       <div className="filter-panel-header">
         <p className="section-kicker">Controls</p>
-        <h3>Filter panel</h3>
-        <p>Basic skeleton UI for the dashboard filters.</p>
+        <h3>Filters</h3>
+        <p>Global filters shared across every chart below.</p>
       </div>
 
-      <form className="filter-form">
+      <form className="filter-form" onSubmit={(e) => e.preventDefault()}>
         <label>
           <span>Country</span>
-          <select defaultValue="">
-            <option value="" disabled>
-              Select country
-            </option>
-            <option>United States</option>
-            <option>France</option>
-            <option>Japan</option>
-            <option>Brazil</option>
+          <select value={country} onChange={(e) => setCountry(e.target.value)}>
+            {COUNTRIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
           </select>
         </label>
 
         <label>
           <span>Category</span>
-          <select defaultValue="">
-            <option value="" disabled>
-              Select category
-            </option>
-            <option>Music</option>
-            <option>Gaming</option>
-            <option>Comedy</option>
-            <option>News & Politics</option>
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
           </select>
         </label>
 
         <label>
-          <span>Publish hour</span>
-          <input type="range" min="0" max="23" defaultValue="12" />
-          <small>12:00</small>
-        </label>
-
-        <label>
           <span>Keyword search</span>
-          <input type="text" placeholder="Search title or tag pattern" />
+          <input
+            type="text"
+            placeholder="Search title or tag"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </label>
 
-        <button type="button" className="button button-primary button-block">
-          Apply filters
+        <button type="button" className="button button-secondary button-block" onClick={reset}>
+          Reset
         </button>
       </form>
 
       <p className="filter-note">
-        {/*TODO LATER*/}
-        TODO LATER : data loading and coordinated chart updates.
+        Filters update charts live. Mock data is in use - see{" "}
+        <code>src/data/mockData.js</code>.
       </p>
     </div>
   );
