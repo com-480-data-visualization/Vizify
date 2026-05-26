@@ -6,7 +6,6 @@ import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
 import { Tooltip } from "./_shared/Tooltip";
 import { InsightCallout } from "./_shared/InsightCallout";
-import * as mockData from "../../data/mockData";
 
 const MARGIN = { top: 28, right: 80, bottom: 36, left: 110 };
 const HEIGHT = 300;
@@ -29,18 +28,19 @@ export function DescriptionChart() {
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("descriptions");
+  const { data: bucketsData } = useDataset("descriptionBuckets");
   const { category } = useFilters();
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, header: "", rows: [] });
   const [descLength, setDescLength] = useState(120);
 
-  const buckets = mockData.descriptionBuckets;
+  const buckets = bucketsData ?? [];
 
   const rows = useMemo(
     () => (data ? data.filter((d) => d.category === category) : []),
     [data, category],
   );
 
-  const activeBucket = useMemo(() => bucketForLength(descLength, buckets), [descLength, buckets]);
+  const activeBucket = useMemo(() => (buckets.length ? bucketForLength(descLength, buckets) : null), [descLength, buckets]);
   const activeRow = useMemo(
     () => rows.find((r) => r.bucket === activeBucket),
     [rows, activeBucket],
@@ -53,7 +53,7 @@ export function DescriptionChart() {
   }, [rows]);
 
   useEffect(() => {
-    if (!rows.length || !width) return;
+    if (!rows.length || !width || !buckets.length) return;
     const tokens = readColorTokens();
 
     const innerW = Math.max(0, width - MARGIN.left - MARGIN.right);

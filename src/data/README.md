@@ -1,10 +1,10 @@
-# Swapping mock data for real content
+# Data pipeline
 
-All charts read from `useDataset(name)` in `useDataset.js`, which today returns
-synchronous values from `mockData.js`. The dataset names map 1:1 to the named
-exports in `mockData.js`:
+All charts read from `useDataset(name)` in `useDataset.js`, which fetches
+preprocessed JSON files from `public/data/`. The dataset names map 1:1 to the
+generated JSON files:
 
-| `useDataset(...)` name | Shape (see JSDoc in `mockData.js`) |
+| `useDataset(...)` name | Shape |
 | --- | --- |
 | `meta`              | `{ categories, countries, videoCounts, totalVideos }` |
 | `heatmap`           | `HeatmapCell[]`        — one row per `(category, dow, hour)` |
@@ -17,31 +17,20 @@ exports in `mockData.js`:
 
 Pick one of the two options below.
 
-## Option A — fetch real JSON from `public/data/`
+## Regenerating from the raw CSV files
 
-1. Produce one JSON file per dataset name above, e.g.
-   `public/data/heatmap.json`, `public/data/emoji.json`, … Each file must
-   contain the same shape the corresponding mock export returns.
-2. Open `src/data/useDataset.js` and flip the flag:
-   ```js
-   const USE_MOCK = false;
+1. Put the raw `*_Trending-*.csv` files in `dataset/`.
+2. Run:
+   ```bash
+   npm run build:data
    ```
-3. Reload. The hook will `fetch('/data/<name>.json')` on first use and cache
-   the result. No chart code changes.
+3. Reload the app. The hook fetches `/data/<name>.json` on first use and
+   caches the result. No chart code changes are needed.
 
 Tip: keep category and country strings identical to those in
 `src/data/constants.js` — filters compare by string equality.
 
-## Option B — paste real values over the mock exports
+## Mock fallback
 
-If you'd rather keep everything bundled and synchronous, edit `mockData.js`
-directly: replace each `export const <name> = ...` with the real array or
-object, keeping the documented shape. Leave `USE_MOCK = true` in
-`useDataset.js`.
-
-## Generating the JSON from a raw dataset
-
-A future `scripts/build-data.mjs` should read the raw trending CSV/Parquet,
-aggregate it into the shapes above, and write the eight files into
-`public/data/`. The JSDoc blocks in `mockData.js` are the source of truth for
-field names, units, and value ranges — mirror them exactly.
+`src/data/mockData.js` is kept only as a layout-development fallback. Production
+data uses `public/data/*.json` with `USE_MOCK = false` in `useDataset.js`.

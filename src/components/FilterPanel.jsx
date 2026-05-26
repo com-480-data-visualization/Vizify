@@ -51,8 +51,8 @@ export function FilterPanel() {
       </form>
 
       <p className="filter-note">
-        Filters update charts live. Mock data is in use - see{" "}
-        <code>src/data/mockData.js</code>.
+        Filters update charts live using the CSV-derived aggregates in{" "}
+        <code>public/data</code>.
       </p>
     </div>
   );

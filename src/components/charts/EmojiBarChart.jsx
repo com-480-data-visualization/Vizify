@@ -5,7 +5,6 @@ import { useFilters } from "../../data/filterStore";
 import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
 import { InsightCallout } from "./_shared/InsightCallout";
-import * as mockData from "../../data/mockData";
 
 const MARGIN = { top: 24, right: 60, bottom: 8, left: 150 };
 const HEIGHT = 180;
@@ -22,6 +21,7 @@ export function EmojiBarChart() {
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("emoji");
+  const { data: emojiTop } = useDataset("emojiTop");
   const { category } = useFilters();
 
   const rows = useMemo(() => {
@@ -30,7 +30,7 @@ export function EmojiBarChart() {
     return [false, true].map((flag) => filtered.find((d) => d.hasEmoji === flag)).filter(Boolean);
   }, [data, category]);
 
-  const topEmojis = mockData.emojiTop[category] ?? mockData.emojiTop.All;
+  const topEmojis = emojiTop?.[category] ?? emojiTop?.All ?? [];
 
   const lift = useMemo(() => {
     if (rows.length < 2) return null;
@@ -123,7 +123,7 @@ export function EmojiBarChart() {
             </>
           )}
           <span className="emoji-rec">
-            Top performers: <strong>{topEmojis.join("  ")}</strong>
+            Top performers: <strong>{topEmojis.join("  ") || "n/a"}</strong>
           </span>
         </InsightCallout>
       </div>

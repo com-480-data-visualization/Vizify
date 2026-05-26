@@ -200,9 +200,8 @@ function App() {
                 metadata strategies.
               </p>
               <p>
-                Charts read from <code>src/data/mockData.js</code> today. The hook in{" "}
-                <code>src/data/useDataset.js</code> swaps to fetching{" "}
-                <code>public/data/*.json</code> once the preprocessing script ships.
+                Charts read preprocessed aggregates from <code>public/data/*.json</code>,
+                generated from the trending CSV files by <code>npm run build:data</code>.
               </p>
             </div>
 

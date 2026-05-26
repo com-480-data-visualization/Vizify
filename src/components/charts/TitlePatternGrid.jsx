@@ -8,11 +8,19 @@ import { useResizeObserver } from "./_shared/useResizeObserver";
 import { Tooltip } from "./_shared/Tooltip";
 import { InsightCallout } from "./_shared/InsightCallout";
 import { GradientLegend } from "./_shared/Legend";
-import * as mockData from "../../data/mockData";
 
 const MARGIN = { top: 70, right: 16, bottom: 12, left: 160 };
 const ROW_HEIGHT = 36;
-const PATTERNS = mockData.TITLE_PATTERNS;
+const PATTERNS = [
+  "Numbers",
+  "Uppercase",
+  "Exclamation",
+  "Question",
+  "Short (<40)",
+  "Long (>80)",
+  "Emoji",
+  "Clickbait",
+];
 
 function formatPct(v) {
   return `${v >= 0 ? "+" : ""}${(v * 100).toFixed(0)}%`;
