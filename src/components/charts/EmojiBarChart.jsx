@@ -105,6 +105,9 @@ export function EmojiBarChart() {
   return (
     <>
       <div className="viz-frame-body">
+        <p className="viz-note">
+          Metric: median views per video · Active category: {category === "All" ? "all categories" : category}
+        </p>
         <div className="chart-wrap emoji-wrap" ref={wrapRef}>
           <svg ref={svgRef} width="100%" height={HEIGHT} aria-label="Median views by emoji usage" />
         </div>

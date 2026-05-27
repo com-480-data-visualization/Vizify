@@ -1,12 +1,20 @@
-export function GradientLegend({ from = "var(--bg-soft)", to = "var(--accent)", lowLabel = "Low", highLabel = "High" }) {
+export function GradientLegend({
+  from = "var(--neutral)",
+  via = "var(--accent-soft)",
+  to = "var(--accent-strong)",
+  lowLabel = "Low",
+  highLabel = "High",
+  note,
+}) {
   return (
     <div className="viz-legend">
       <span>{lowLabel}</span>
       <span
         className="viz-legend-gradient"
-        style={{ backgroundImage: `linear-gradient(to right, ${from}, ${to})` }}
+        style={{ backgroundImage: `linear-gradient(to right, ${from}, ${via}, ${to})` }}
       />
       <span>{highLabel}</span>
+      {note && <span>{note}</span>}
     </div>
   );
 }

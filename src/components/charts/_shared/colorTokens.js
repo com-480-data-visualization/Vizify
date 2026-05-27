@@ -15,6 +15,9 @@ export function readColorTokens() {
     text: get("--text") || "#0e0b08",
     muted: get("--muted") || "#6b6460",
     subtle: get("--subtle") || "#a09890",
-    accent: get("--accent") || "#b83025",
+    neutral: get("--neutral") || "#e8e6e3",
+    accentSoft: get("--accent-soft") || "#e8a6a1",
+    accent: get("--accent") || "#b91c1c",
+    accentStrong: get("--accent-strong") || "#7f0000",
   };
 }

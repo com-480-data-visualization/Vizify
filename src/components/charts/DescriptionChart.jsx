@@ -23,6 +23,16 @@ function bucketForLength(length, buckets) {
   return buckets[buckets.length - 1].label;
 }
 
+function displayBucket(label) {
+  return String(label || "").replace("-", "–");
+}
+
+function formatDiff(active, best) {
+  if (!active || !best || !best.avgComments) return "-";
+  const pct = ((active.avgComments - best.avgComments) / best.avgComments) * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`;
+}
+
 export function DescriptionChart() {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
@@ -140,6 +150,23 @@ export function DescriptionChart() {
       .ease(d3.easeCubicOut)
       .attr("width", (d) => x(d.avgComments));
 
+    if (activeRow) {
+      const y0 = y(activeRow.bucket);
+      const activeWidth = x(activeRow.avgComments);
+      const labelInside = activeWidth > 170;
+      root
+        .append("text")
+        .attr("x", labelInside ? 8 : Math.min(innerW - 122, activeWidth + 12))
+        .attr("y", y0 + y.bandwidth() / 2)
+        .attr("alignment-baseline", "middle")
+        .attr("fill", labelInside ? "#fff" : tokens.accentStrong)
+        .style("font-family", "'DM Mono', monospace")
+        .style("font-size", "10px")
+        .style("font-weight", 600)
+        .style("letter-spacing", "0.08em")
+        .text("YOUR CURRENT RANGE");
+    }
+
     bars
       .append("text")
       .attr("class", "desc-value")
@@ -155,7 +182,7 @@ export function DescriptionChart() {
       .delay(450)
       .duration(250)
       .style("opacity", 1);
-  }, [rows, width, activeBucket, buckets]);
+  }, [rows, width, activeBucket, buckets, activeRow]);
 
   return (
     <>
@@ -177,10 +204,19 @@ export function DescriptionChart() {
           <div className="desc-slider-ticks">
             {buckets.map((b) => (
               <span key={b.label} className={b.label === activeBucket ? "is-active" : ""}>
-                {b.label}
+                {displayBucket(b.label)}
               </span>
             ))}
           </div>
+        </div>
+
+        <div className="desc-selected">
+          <span>
+            Your description length: <strong>{descLength} words</strong>
+          </span>
+          <span>
+            Your bucket: <strong>{displayBucket(activeBucket)} words</strong>
+          </span>
         </div>
 
         <div className="chart-wrap desc-wrap" ref={wrapRef}>
@@ -193,19 +229,19 @@ export function DescriptionChart() {
             <span className="desc-stat-num">
               {activeRow ? activeRow.avgComments.toLocaleString() : "-"}
             </span>
-            <p>Avg comments at your length</p>
+            <p>Your range avg comments</p>
           </div>
           <div>
             <span className="desc-stat-num">
               {insight ? insight.avgComments.toLocaleString() : "-"}
             </span>
-            <p>Peak comments</p>
+            <p>Best range avg comments</p>
           </div>
           <div>
             <span className="desc-stat-num">
-              {insight ? insight.bucket : "-"}
+              {formatDiff(activeRow, insight)}
             </span>
-            <p>Optimal bucket</p>
+            <p>Difference vs best</p>
           </div>
         </div>
       </div>
@@ -213,7 +249,7 @@ export function DescriptionChart() {
         <div className="viz-frame-footer">
           <InsightCallout>
             In {category === "All" ? "the dataset" : category}, descriptions in the{" "}
-            <strong>{insight.bucket}-word</strong> range attract the most conversation -{" "}
+            <strong>{displayBucket(insight.bucket)}-word</strong> range are associated with the highest average number of comments -{" "}
             <strong>{insight.avgComments.toLocaleString()}</strong> avg comments per video.
           </InsightCallout>
         </div>

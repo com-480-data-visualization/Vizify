@@ -26,12 +26,29 @@ function formatPct(v) {
   return `${v >= 0 ? "+" : ""}${(v * 100).toFixed(0)}%`;
 }
 
+function shortCategory(category) {
+  const map = {
+    "People & Blogs": "People",
+    "Film & Animation": "Film",
+    "News & Politics": "News",
+    "Howto & Style": "Howto",
+    "Science & Technology": "Tech",
+    "Autos & Vehicles": "Autos",
+    "Pets & Animals": "Pets",
+    "Travel & Events": "Travel",
+    "Nonprofits & Activism": "Nonprofit",
+  };
+  return map[category] ?? category;
+}
+
 export function TitlePatternGrid() {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("titlePatterns");
   const { category } = useFilters();
+  const [viewMode, setViewMode] = useState("all");
+  const [sortBy, setSortBy] = useState("uplift");
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, header: "", rows: [] });
 
   const columns = useMemo(() => {
@@ -41,13 +58,28 @@ export function TitlePatternGrid() {
     return [category, ...others];
   }, [category]);
 
+  const displayedPatterns = useMemo(() => {
+    if (!data) return PATTERNS;
+    const scored = PATTERNS.map((pattern) => {
+      const cells = data.filter((d) => columns.includes(d.category) && d.pattern === pattern);
+      const maxUplift = d3.max(cells, (d) => d.uplift) ?? 0;
+      const avgUplift = d3.mean(cells, (d) => d.uplift) ?? 0;
+      const avgShare = d3.mean(cells, (d) => d.share) ?? 0;
+      return { pattern, maxUplift, avgUplift, avgShare };
+    });
+    const sorted = scored.sort((a, b) =>
+      sortBy === "adoption" ? b.avgShare - a.avgShare : b.maxUplift - a.maxUplift || b.avgShare - a.avgShare,
+    );
+    return (viewMode === "top" ? sorted.slice(0, 5) : sorted).map((d) => d.pattern);
+  }, [data, columns, viewMode, sortBy]);
+
   const rows = useMemo(() => {
     if (!data) return [];
-    return PATTERNS.map((p) => ({
+    return displayedPatterns.map((p) => ({
       pattern: p,
       cells: columns.map((cat) => data.find((d) => d.category === cat && d.pattern === p)),
     }));
-  }, [data, columns]);
+  }, [data, columns, displayedPatterns]);
 
   const insight = useMemo(() => {
     if (!data) return null;
@@ -58,7 +90,7 @@ export function TitlePatternGrid() {
     return best;
   }, [data, category]);
 
-  const height = MARGIN.top + MARGIN.bottom + PATTERNS.length * ROW_HEIGHT;
+  const height = MARGIN.top + MARGIN.bottom + displayedPatterns.length * ROW_HEIGHT;
 
   useEffect(() => {
     if (!rows.length || !width) return;
@@ -66,15 +98,15 @@ export function TitlePatternGrid() {
 
     const innerW = Math.max(0, width - MARGIN.left - MARGIN.right);
     const x = d3.scaleBand().domain(columns).range([0, innerW]).padding(0.12);
-    const y = d3.scaleBand().domain(PATTERNS).range([MARGIN.top, height - MARGIN.bottom]).padding(0.22);
+    const y = d3.scaleBand().domain(displayedPatterns).range([MARGIN.top, height - MARGIN.bottom]).padding(0.22);
 
     // Symmetric color scale around 0 (red-to-accent for positive, muted for negative).
     const upliftValues = rows.flatMap((r) => r.cells.filter(Boolean).map((c) => c.uplift));
     const maxAbs = Math.max(0.1, d3.max(upliftValues, (d) => Math.abs(d)) ?? 0.1);
     const color = d3
       .scaleLinear()
-      .domain([-maxAbs, 0, maxAbs])
-      .range([tokens.subtle, tokens.bgSoft, tokens.accent])
+      .domain([-maxAbs, 0, maxAbs * 0.55, maxAbs])
+      .range([tokens.subtle, tokens.neutral, tokens.accentSoft, tokens.accentStrong])
       .clamp(true);
 
     const svg = d3.select(svgRef.current).attr("viewBox", `0 0 ${width} ${height}`);
@@ -91,16 +123,16 @@ export function TitlePatternGrid() {
       .attr("text-anchor", "start")
       .attr("fill", (c) => (c === category ? tokens.text : tokens.muted))
       .style("font-family", "'DM Mono', monospace")
-      .style("font-size", "10px")
-      .style("letter-spacing", "0.06em")
+      .style("font-size", "9.5px")
+      .style("letter-spacing", "0")
       .style("font-weight", (c) => (c === category ? 600 : 400))
-      .text((c) => c);
+      .text((c) => shortCategory(c));
 
     // Row labels
     svg
       .append("g")
       .selectAll("text.row-label-pat")
-      .data(PATTERNS)
+      .data(displayedPatterns)
       .join("text")
       .attr("class", "row-label-pat")
       .attr("x", MARGIN.left - 14)
@@ -139,7 +171,7 @@ export function TitlePatternGrid() {
           .attr("stroke-width", cat === category ? 1.5 : 0)
           .attr("opacity", 0)
           .transition()
-          .delay(i * 8 + PATTERNS.indexOf(row.pattern) * 18)
+          .delay(i * 8 + displayedPatterns.indexOf(row.pattern) * 18)
           .duration(420)
           .attr("opacity", 1);
 
@@ -154,7 +186,7 @@ export function TitlePatternGrid() {
           .attr("stroke-width", 1.2)
           .style("pointer-events", "none")
           .transition()
-          .delay(i * 8 + PATTERNS.indexOf(row.pattern) * 18 + 220)
+          .delay(i * 8 + displayedPatterns.indexOf(row.pattern) * 18 + 220)
           .duration(360)
           .attr("r", r);
 
@@ -186,22 +218,66 @@ export function TitlePatternGrid() {
           .on("mouseleave", () => setTooltip((t) => ({ ...t, visible: false })));
       });
     });
-  }, [rows, columns, width, height, category]);
+  }, [rows, columns, width, height, category, displayedPatterns]);
 
   return (
     <>
       <div className="viz-frame-body">
+        <div className="viz-controls">
+          <div className="viz-control-group">
+            <span className="viz-control-label">View</span>
+            <div className="segmented-control" aria-label="Title pattern view">
+              <button
+                type="button"
+                className={`has-help ${viewMode === "all" ? "is-active" : ""}`}
+                onClick={() => setViewMode("all")}
+                data-tooltip="Show every title pattern in the matrix."
+              >
+                All patterns
+              </button>
+              <button
+                type="button"
+                className={`has-help ${viewMode === "top" ? "is-active" : ""}`}
+                onClick={() => setViewMode("top")}
+                data-tooltip="Show only the patterns with the strongest positive view uplift."
+              >
+                Top uplift only
+              </button>
+            </div>
+          </div>
+          <div className="viz-control-group">
+            <span className="viz-control-label">Sort</span>
+            <div className="segmented-control" aria-label="Title pattern sort">
+              <button
+                type="button"
+                className={`has-help ${sortBy === "uplift" ? "is-active" : ""}`}
+                onClick={() => setSortBy("uplift")}
+                data-tooltip="Order rows by the strongest observed view uplift."
+              >
+                Uplift
+              </button>
+              <button
+                type="button"
+                className={`has-help ${sortBy === "adoption" ? "is-active" : ""}`}
+                onClick={() => setSortBy("adoption")}
+                data-tooltip="Order rows by how often creators use each pattern."
+              >
+                Adoption
+              </button>
+            </div>
+          </div>
+        </div>
         <div className="chart-wrap title-grid-wrap" ref={wrapRef}>
           <svg ref={svgRef} width="100%" height={height} aria-label="Title patterns by category" />
           <Tooltip {...tooltip} />
         </div>
         <div className="viz-frame-legend title-grid-legend">
-          <GradientLegend lowLabel="UNDERPERFORMS" highLabel="LIFTS VIEWS" />
+          <GradientLegend lowLabel="NEGATIVE" highLabel="HIGH UPLIFT" note="COLOR = VIEW UPLIFT" />
           <div className="title-grid-legend-secondary">
             <span className="title-grid-circle small" />
             <span className="title-grid-circle med" />
             <span className="title-grid-circle big" />
-            <span className="title-grid-circle-label">RING SIZE = PATTERN ADOPTION</span>
+            <span className="title-grid-circle-label">CIRCLE SIZE = PATTERN ADOPTION</span>
           </div>
         </div>
       </div>

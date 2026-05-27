@@ -10,7 +10,7 @@ function formatCount(n) {
 
 /**
  * Outer chrome shared by every visualization section.
- * Renders: eyebrow (VIZ N), Cormorant heading, intro paragraph, right-aligned
+ * Renders: metadata label, Cormorant heading, intro paragraph, right-aligned
  * "videos analyzed" meta block, and a cream-surface frame with chips on top
  * + the chart body below.
  */

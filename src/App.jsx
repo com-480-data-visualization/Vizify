@@ -1,4 +1,4 @@
-import { FilterPanel } from "./components/FilterPanel";
+import { useRef, useState } from "react";
 import { SectionShell } from "./components/SectionShell";
 import { VizSection } from "./components/VizSection";
 import { HeatmapChart } from "./components/charts/HeatmapChart";
@@ -8,10 +8,36 @@ import { DescriptionChart } from "./components/charts/DescriptionChart";
 import { TitlePatternGrid } from "./components/charts/TitlePatternGrid";
 
 const keyQuestions = [
-  "What kind of title patterns appear most often in trending videos?",
-  "Do some categories exploit metadata better than others?",
-  "Does publish time matter?",
-  "Are there outliers that get unusual engagement?",
+  {
+    question: "When should I publish if I want the best chance of visibility?",
+    answer: "Start with the publication window: compare average visibility by weekday and hour in",
+    linkLabel: "publish time",
+    vizIndex: 0,
+  },
+  {
+    question: "Are emojis helping my title stand out or just adding noise?",
+    answer: "Check whether emoji titles are associated with higher median views in",
+    linkLabel: "emojis",
+    vizIndex: 1,
+  },
+  {
+    question: "Which title style should I copy from trending videos?",
+    answer: "Compare numbers, questions, caps, length, and clickbait-style wording in",
+    linkLabel: "title patterns",
+    vizIndex: 2,
+  },
+  {
+    question: "Which tags are popular, and which ones are actually linked to reach?",
+    answer: "Switch between frequent tags and strongest relative view gain in",
+    linkLabel: "tags",
+    vizIndex: 3,
+  },
+  {
+    question: "How long should my description be to encourage comments?",
+    answer: "Use the slider to compare your range with the best-performing bucket in",
+    linkLabel: "descriptions",
+    vizIndex: 4,
+  },
 ];
 
 const informationCards = [
@@ -44,6 +70,49 @@ const teamMembers = [
   { name: "Victor Zablocki", sciper: "361602" },
 ];
 
+const vizSlides = [
+  {
+    id: "viz-time",
+    eyebrow: "Publish time",
+    shortTitle: "Publish time",
+    title: "Best time to go viral",
+    intro: "Understand when your audience is most active and how timing influences performance on YouTube.",
+    chart: <HeatmapChart />,
+  },
+  {
+    id: "viz-emoji",
+    eyebrow: "Emojis",
+    shortTitle: "Emojis",
+    title: "Boost your views with emojis",
+    intro: "Do emojis in titles correlate with stronger visibility - and which styles fit each category?",
+    chart: <EmojiBarChart />,
+  },
+  {
+    id: "viz-titles",
+    eyebrow: "Title patterns",
+    shortTitle: "Title patterns",
+    title: "Write titles that pull clicks",
+    intro: "Each tile shows how often a pattern is used (ring size) and how much it lifts views (fill).",
+    chart: <TitlePatternGrid />,
+  },
+  {
+    id: "viz-tags",
+    eyebrow: "Tags",
+    shortTitle: "Tags",
+    title: "Use tags to increase reach",
+    intro: "Which tags actually drive views. Bubble size encodes frequency, color encodes average uplift.",
+    chart: <TagBubbleChart />,
+  },
+  {
+    id: "viz-desc",
+    eyebrow: "Descriptions",
+    shortTitle: "Descriptions",
+    title: "A better description for more comments",
+    intro: "Drag the slider to your description length to see which bucket you fall into and how it compares.",
+    chart: <DescriptionChart />,
+  },
+];
+
 function ItemGrid({ label, items }) {
   return (
     <div className="method-column">
@@ -60,6 +129,39 @@ function ItemGrid({ label, items }) {
 }
 
 function App() {
+  const [activeViz, setActiveViz] = useState(0);
+  const wheelLockRef = useRef(false);
+  const touchStartRef = useRef(null);
+  const activeSlide = vizSlides[activeViz];
+  const goToViz = (index) => setActiveViz((index + vizSlides.length) % vizSlides.length);
+  const goByGesture = (direction) => {
+    if (wheelLockRef.current) return;
+    wheelLockRef.current = true;
+    goToViz(activeViz + direction);
+    window.setTimeout(() => {
+      wheelLockRef.current = false;
+    }, 620);
+  };
+  const handleCarouselWheel = (event) => {
+    const horizontal = Math.abs(event.deltaX) > Math.abs(event.deltaY) * 1.2;
+    if (!horizontal || Math.abs(event.deltaX) < 24) return;
+    event.preventDefault();
+    goByGesture(event.deltaX > 0 ? 1 : -1);
+  };
+  const handleTouchStart = (event) => {
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+  const handleTouchEnd = (event) => {
+    if (!touchStartRef.current) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    if (Math.abs(dx) < 54 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    goByGesture(dx < 0 ? 1 : -1);
+  };
+
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -126,66 +228,89 @@ function App() {
 
         <SectionShell title="Key Questions">
           <div className="question-grid">
-            {keyQuestions.map((question) => (
-              <article className="question-card" key={question}>
+            {keyQuestions.map((item) => (
+              <article className="question-card" key={item.question}>
                 <span className="question-index">Question</span>
-                <p>{question}</p>
+                <p>{item.question}</p>
+                <div className="question-answer">
+                  {item.answer}{" "}
+                  <a href="#dashboard" onClick={() => goToViz(item.vizIndex)}>
+                    {item.linkLabel}
+                  </a>
+                  .
+                </div>
               </article>
             ))}
           </div>
         </SectionShell>
 
-        <SectionShell id="dashboard" title="Explore the data">
+        <SectionShell id="dashboard" title="Choose the data you want to optimize">
           <div className="dashboard-layout">
-            <aside className="dashboard-sidebar">
-              <FilterPanel />
-            </aside>
-
             <div className="dashboard-main">
-              <VizSection
-                id="viz-time"
-                eyebrow="VIZ 1"
-                title="Best time to go viral"
-                intro="Understand when your audience is most active and how timing influences performance on YouTube."
-              >
-                <HeatmapChart />
-              </VizSection>
+              <div className="viz-carousel">
+                <div className="viz-carousel-top">
+                  <button
+                    type="button"
+                    className="viz-carousel-arrow"
+                    aria-label="Previous visualization"
+                    onClick={() => goToViz(activeViz - 1)}
+                  >
+                    ‹
+                  </button>
+                  <div className="viz-carousel-tabs" aria-label="Visualization navigation">
+                    {vizSlides.map((slide, index) => (
+                      <button
+                        key={slide.id}
+                        type="button"
+                        className={index === activeViz ? "is-active" : ""}
+                        onClick={() => goToViz(index)}
+                        aria-current={index === activeViz ? "true" : undefined}
+                      >
+                        <span>{slide.eyebrow}</span>
+                        {slide.shortTitle}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="viz-carousel-arrow"
+                    aria-label="Next visualization"
+                    onClick={() => goToViz(activeViz + 1)}
+                  >
+                    ›
+                  </button>
+                </div>
 
-              <VizSection
-                id="viz-emoji"
-                eyebrow="VIZ 2"
-                title="Boost your views with emojis"
-                intro="Do emojis in titles correlate with stronger visibility - and which styles fit each category?"
-              >
-                <EmojiBarChart />
-              </VizSection>
+                <div className="viz-carousel-status">
+                  <span>{activeSlide.eyebrow}</span>
+                  <strong>{activeSlide.title}</strong>
+                </div>
 
-              <VizSection
-                id="viz-titles"
-                eyebrow="VIZ 3"
-                title="Patterns that lift titles"
-                intro="Each tile shows how often a pattern is used (ring size) and how much it lifts views (fill)."
-              >
-                <TitlePatternGrid />
-              </VizSection>
-
-              <VizSection
-                id="viz-tags"
-                eyebrow="VIZ 4"
-                title="Use tags to increase reach"
-                intro="Which tags actually drive views. Bubble size encodes frequency, color encodes average uplift."
-              >
-                <TagBubbleChart />
-              </VizSection>
-
-              <VizSection
-                id="viz-desc"
-                eyebrow="VIZ 5"
-                title="A better description for more comments"
-                intro="Drag the slider to your description length to see which bucket you fall into and how it compares."
-              >
-                <DescriptionChart />
-              </VizSection>
+                <div
+                  className="viz-carousel-window"
+                  onWheel={handleCarouselWheel}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <div
+                    className="viz-carousel-track"
+                    style={{ transform: `translateX(-${activeViz * 100}%)` }}
+                  >
+                    {vizSlides.map((slide) => (
+                      <div className="viz-carousel-slide" key={slide.id}>
+                        <VizSection
+                          id={slide.id}
+                          eyebrow={slide.eyebrow}
+                          title={slide.title}
+                          intro={slide.intro}
+                        >
+                          {slide.chart}
+                        </VizSection>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </SectionShell>
