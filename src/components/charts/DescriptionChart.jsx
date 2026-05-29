@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useDataset } from "../../data/useDataset";
 import { useFilters } from "../../data/filterStore";
+import { resolvedCountry, scopedRows, scopeLabel } from "../../data/scope";
 import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
 import { Tooltip } from "./_shared/Tooltip";
@@ -9,6 +10,7 @@ import { InsightCallout } from "./_shared/InsightCallout";
 
 const MARGIN = { top: 28, right: 80, bottom: 36, left: 110 };
 const HEIGHT = 300;
+const SLIDER_MAX = 600;
 
 function formatNum(n) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -33,22 +35,32 @@ function formatDiff(active, best) {
   return `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`;
 }
 
+function bucketTrackStyle(bucket) {
+  const start = Math.max(0, bucket.start);
+  const end = Math.min(SLIDER_MAX, bucket.end);
+  return {
+    left: `${(start / SLIDER_MAX) * 100}%`,
+    right: `${100 - (end / SLIDER_MAX) * 100}%`,
+  };
+}
+
 export function DescriptionChart() {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("descriptions");
   const { data: bucketsData } = useDataset("descriptionBuckets");
-  const { category } = useFilters();
+  const { category, country } = useFilters();
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, header: "", rows: [] });
   const [descLength, setDescLength] = useState(120);
 
   const buckets = bucketsData ?? [];
 
   const rows = useMemo(
-    () => (data ? data.filter((d) => d.category === category) : []),
-    [data, category],
+    () => scopedRows(data, category, country),
+    [data, category, country],
   );
+  const activeCountry = resolvedCountry(data, country);
 
   const activeBucket = useMemo(() => (buckets.length ? bucketForLength(descLength, buckets) : null), [descLength, buckets]);
   const activeRow = useMemo(
@@ -153,18 +165,27 @@ export function DescriptionChart() {
     if (activeRow) {
       const y0 = y(activeRow.bucket);
       const activeWidth = x(activeRow.avgComments);
-      const labelInside = activeWidth > 170;
       root
-        .append("text")
-        .attr("x", labelInside ? 8 : Math.min(innerW - 122, activeWidth + 12))
-        .attr("y", y0 + y.bandwidth() / 2)
-        .attr("alignment-baseline", "middle")
-        .attr("fill", labelInside ? "#fff" : tokens.accentStrong)
-        .style("font-family", "'DM Mono', monospace")
-        .style("font-size", "10px")
-        .style("font-weight", 600)
-        .style("letter-spacing", "0.08em")
-        .text("YOUR CURRENT RANGE");
+        .append("rect")
+        .attr("x", activeWidth + 4)
+        .attr("y", y0 - 3)
+        .attr("width", 2)
+        .attr("height", y.bandwidth() + 6)
+        .attr("fill", tokens.text);
+
+      if (activeWidth > 128) {
+        root
+          .append("text")
+          .attr("x", 8)
+          .attr("y", y0 + y.bandwidth() / 2)
+          .attr("alignment-baseline", "middle")
+          .attr("fill", "#fff")
+          .style("font-family", "'DM Mono', monospace")
+          .style("font-size", "9.5px")
+          .style("font-weight", 600)
+          .style("letter-spacing", "0.06em")
+          .text("CURRENT RANGE");
+      }
     }
 
     bars
@@ -196,14 +217,18 @@ export function DescriptionChart() {
             id="desc-len"
             type="range"
             min={0}
-            max={600}
+            max={SLIDER_MAX}
             step={10}
             value={descLength}
             onChange={(e) => setDescLength(Number(e.target.value))}
           />
           <div className="desc-slider-ticks">
             {buckets.map((b) => (
-              <span key={b.label} className={b.label === activeBucket ? "is-active" : ""}>
+              <span
+                key={b.label}
+                className={b.label === activeBucket ? "is-active" : ""}
+                style={bucketTrackStyle(b)}
+              >
                 {displayBucket(b.label)}
               </span>
             ))}
@@ -248,7 +273,7 @@ export function DescriptionChart() {
       {insight && (
         <div className="viz-frame-footer">
           <InsightCallout>
-            In {category === "All" ? "the dataset" : category}, descriptions in the{" "}
+            In {category === "All" ? `the ${scopeLabel(activeCountry)} dataset` : `${category} (${scopeLabel(activeCountry)})`}, descriptions in the{" "}
             <strong>{displayBucket(insight.bucket)}-word</strong> range are associated with the highest average number of comments -{" "}
             <strong>{insight.avgComments.toLocaleString()}</strong> avg comments per video.
           </InsightCallout>

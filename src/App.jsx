@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { SectionShell } from "./components/SectionShell";
 import { VizSection } from "./components/VizSection";
+import { FilterPanel } from "./components/FilterPanel";
 import { HeatmapChart } from "./components/charts/HeatmapChart";
 import { EmojiBarChart } from "./components/charts/EmojiBarChart";
 import { TagBubbleChart } from "./components/charts/TagBubbleChart";
@@ -132,7 +133,6 @@ function App() {
   const [activeViz, setActiveViz] = useState(0);
   const wheelLockRef = useRef(false);
   const touchStartRef = useRef(null);
-  const activeSlide = vizSlides[activeViz];
   const goToViz = (index) => setActiveViz((index + vizSlides.length) % vizSlides.length);
   const goByGesture = (direction) => {
     if (wheelLockRef.current) return;
@@ -244,9 +244,10 @@ function App() {
           </div>
         </SectionShell>
 
-        <SectionShell id="dashboard" title="Choose the data you want to optimize">
+        <SectionShell id="dashboard" title="Dashboard">
           <div className="dashboard-layout">
             <div className="dashboard-main">
+              <FilterPanel />
               <div className="viz-carousel">
                 <div className="viz-carousel-top">
                   <button
@@ -266,7 +267,6 @@ function App() {
                         onClick={() => goToViz(index)}
                         aria-current={index === activeViz ? "true" : undefined}
                       >
-                        <span>{slide.eyebrow}</span>
                         {slide.shortTitle}
                       </button>
                     ))}
@@ -279,11 +279,6 @@ function App() {
                   >
                     ›
                   </button>
-                </div>
-
-                <div className="viz-carousel-status">
-                  <span>{activeSlide.eyebrow}</span>
-                  <strong>{activeSlide.title}</strong>
                 </div>
 
                 <div

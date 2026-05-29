@@ -6,14 +6,14 @@ generated JSON files:
 
 | `useDataset(...)` name | Shape |
 | --- | --- |
-| `meta`              | `{ categories, countries, videoCounts, totalVideos }` |
-| `heatmap`           | `HeatmapCell[]`        — one row per `(category, dow, hour)` |
-| `emoji`             | `EmojiRow[]`           — two rows per category (`hasEmoji` true/false) |
-| `emojiTop`          | `Record<category, string[]>` — top-3 emojis per category |
-| `tags`              | `TagRow[]`             — `(category, tag, freq, uplift)` |
-| `descriptions`      | `DescriptionBucket[]`  — one row per `(category, bucket)` |
+| `meta`              | `{ categories, countries, videoCounts, videoCountsByCountry, totalVideos }` |
+| `heatmap`           | `HeatmapCell[]`        — one row per `(country, category, dow, hour)` |
+| `emoji`             | `EmojiRow[]`           — two rows per `(country, category)` (`hasEmoji` true/false) |
+| `emojiTop`          | `Record<country, Record<category, string[]>>` — top-3 emojis per scope |
+| `tags`              | `TagRow[]`             — `(country, category, tag, freq, uplift)` |
+| `descriptions`      | `DescriptionBucket[]`  — one row per `(country, category, bucket)` |
 | `descriptionBuckets`| bucket definitions (label + range) |
-| `titlePatterns`     | `TitlePatternCell[]`   — `(category, pattern, share, uplift)` |
+| `titlePatterns`     | `TitlePatternCell[]`   — `(country, category, pattern, share, uplift)` |
 
 Pick one of the two options below.
 

@@ -1,5 +1,7 @@
 import { CategoryChips } from "./charts/_shared/CategoryChips";
 import { useDataset } from "../data/useDataset";
+import { useFilters } from "../data/filterStore";
+import { scopeLabel } from "../data/scope";
 
 function formatCount(n) {
   if (n == null) return "-";
@@ -16,8 +18,10 @@ function formatCount(n) {
  */
 export function VizSection({ id, eyebrow, title, intro, withChips = true, children }) {
   const { data: meta } = useDataset("meta");
+  const { country } = useFilters();
   const totalVideos = meta?.totalVideos;
   const countryCount = (meta?.countries?.length ?? 1) - 1; // minus "All"
+  const visibleCountry = meta?.videoCountsByCountry?.[country] ? country : "All";
 
   return (
     <section className="viz-section" id={id}>
@@ -31,7 +35,7 @@ export function VizSection({ id, eyebrow, title, intro, withChips = true, childr
           <span className="viz-meta-number">{formatCount(totalVideos)}</span>
           <span className="viz-meta-caption">
             videos analyzed
-            {countryCount > 0 ? ` · across ${countryCount} countries` : ""}
+            {visibleCountry === "All" && countryCount > 0 ? ` · across ${countryCount} countries` : ` · ${scopeLabel(visibleCountry)}`}
           </span>
         </div>
       </div>

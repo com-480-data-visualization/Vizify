@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useDataset } from "../../data/useDataset";
 import { useFilters } from "../../data/filterStore";
+import { resolvedCountry, scopedDataset, scopeLabel } from "../../data/scope";
 import { CATEGORIES } from "../../data/constants";
 import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
@@ -46,10 +47,13 @@ export function TitlePatternGrid() {
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("titlePatterns");
-  const { category } = useFilters();
+  const { category, country } = useFilters();
   const [viewMode, setViewMode] = useState("all");
   const [sortBy, setSortBy] = useState("uplift");
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, header: "", rows: [] });
+
+  const scopedData = useMemo(() => scopedDataset(data, country), [data, country]);
+  const activeCountry = resolvedCountry(data, country);
 
   const columns = useMemo(() => {
     const baseCats = CATEGORIES.filter((c) => c !== "All");
@@ -59,9 +63,9 @@ export function TitlePatternGrid() {
   }, [category]);
 
   const displayedPatterns = useMemo(() => {
-    if (!data) return PATTERNS;
+    if (!scopedData.length) return PATTERNS;
     const scored = PATTERNS.map((pattern) => {
-      const cells = data.filter((d) => columns.includes(d.category) && d.pattern === pattern);
+      const cells = scopedData.filter((d) => columns.includes(d.category) && d.pattern === pattern);
       const maxUplift = d3.max(cells, (d) => d.uplift) ?? 0;
       const avgUplift = d3.mean(cells, (d) => d.uplift) ?? 0;
       const avgShare = d3.mean(cells, (d) => d.share) ?? 0;
@@ -71,24 +75,24 @@ export function TitlePatternGrid() {
       sortBy === "adoption" ? b.avgShare - a.avgShare : b.maxUplift - a.maxUplift || b.avgShare - a.avgShare,
     );
     return (viewMode === "top" ? sorted.slice(0, 5) : sorted).map((d) => d.pattern);
-  }, [data, columns, viewMode, sortBy]);
+  }, [scopedData, columns, viewMode, sortBy]);
 
   const rows = useMemo(() => {
-    if (!data) return [];
+    if (!scopedData.length) return [];
     return displayedPatterns.map((p) => ({
       pattern: p,
-      cells: columns.map((cat) => data.find((d) => d.category === cat && d.pattern === p)),
+      cells: columns.map((cat) => scopedData.find((d) => d.category === cat && d.pattern === p)),
     }));
-  }, [data, columns, displayedPatterns]);
+  }, [scopedData, columns, displayedPatterns]);
 
   const insight = useMemo(() => {
-    if (!data) return null;
+    if (!scopedData.length) return null;
     const focus = category === "All" ? null : category;
-    const candidates = data.filter((d) => (focus ? d.category === focus : d.category === "All"));
+    const candidates = scopedData.filter((d) => (focus ? d.category === focus : d.category === "All"));
     if (!candidates.length) return null;
     const best = candidates.reduce((a, b) => (a.uplift > b.uplift ? a : b));
     return best;
-  }, [data, category]);
+  }, [scopedData, category]);
 
   const height = MARGIN.top + MARGIN.bottom + displayedPatterns.length * ROW_HEIGHT;
 
@@ -286,13 +290,13 @@ export function TitlePatternGrid() {
           <InsightCallout>
             {category === "All" ? (
               <>
-                Across the dataset, <strong>{insight.pattern.toLowerCase()}</strong> titles deliver{" "}
+                Across {scopeLabel(activeCountry)}, <strong>{insight.pattern.toLowerCase()}</strong> titles deliver{" "}
                 <strong>{formatPct(insight.uplift)}</strong> uplift - used by{" "}
                 <strong>{(insight.share * 100).toFixed(0)}%</strong> of trending videos.
               </>
             ) : (
               <>
-                In {category}, <strong>{insight.pattern.toLowerCase()}</strong> titles lift views by{" "}
+                In {category} ({scopeLabel(activeCountry)}), <strong>{insight.pattern.toLowerCase()}</strong> titles lift views by{" "}
                 <strong>{formatPct(insight.uplift)}</strong>, despite only{" "}
                 <strong>{(insight.share * 100).toFixed(0)}%</strong> of creators using them.
               </>

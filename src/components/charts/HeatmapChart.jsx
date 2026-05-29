@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useDataset } from "../../data/useDataset";
 import { useFilters } from "../../data/filterStore";
+import { resolvedCountry, scopedRows, scopeLabel } from "../../data/scope";
 import { DAY_LABELS } from "../../data/constants";
 import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
@@ -30,14 +31,15 @@ export function HeatmapChart() {
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("heatmap");
-  const { category } = useFilters();
+  const { category, country } = useFilters();
   const [metric, setMetric] = useState("avgViews");
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, header: "", rows: [] });
 
   const rows = useMemo(
-    () => (data ? data.filter((d) => d.category === category) : []),
-    [data, category],
+    () => scopedRows(data, category, country),
+    [data, category, country],
   );
+  const activeCountry = resolvedCountry(data, country);
 
   const insight = useMemo(() => {
     if (!rows.length) return null;
@@ -192,7 +194,7 @@ export function HeatmapChart() {
       {insight && (
         <div className="viz-frame-footer">
           <InsightCallout>
-            {category === "All" ? "Overall" : category} peaks on{" "}
+            {category === "All" ? `Overall in ${scopeLabel(activeCountry)}` : `${category} in ${scopeLabel(activeCountry)}`} peaks on{" "}
             <strong>
               {insight.day} {String(insight.hour).padStart(2, "0")}h UTC
             </strong>{" "}

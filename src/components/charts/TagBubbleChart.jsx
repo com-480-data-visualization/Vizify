@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useDataset } from "../../data/useDataset";
 import { useFilters } from "../../data/filterStore";
+import { resolvedCountry, scopedRows, scopeLabel } from "../../data/scope";
 import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
 import { Tooltip } from "./_shared/Tooltip";
@@ -24,18 +25,17 @@ export function TagBubbleChart() {
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("tags");
-  const { category } = useFilters();
+  const { category, country } = useFilters();
   const [mode, setMode] = useState("frequency");
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, header: "", rows: [] });
 
   const rows = useMemo(() => {
-    if (!data) return [];
-    return data
-      .filter((d) => d.category === category)
+    return scopedRows(data, category, country)
       .sort((a, b) => (mode === "uplift" ? b.uplift - a.uplift || b.freq - a.freq : b.freq - a.freq))
       .slice(0, mode === "uplift" ? 24 : 30)
       .map((d) => ({ ...d }));
-  }, [data, category, mode]);
+  }, [data, category, country, mode]);
+  const activeCountry = resolvedCountry(data, country);
 
   const insight = useMemo(() => {
     if (!rows.length) return null;
@@ -126,7 +126,7 @@ export function TagBubbleChart() {
             { label: "Category", value: d.category },
             { label: "Videos", value: formatFreq(d.freq) },
             { label: "Avg uplift", value: formatPct(d.uplift) },
-            { label: "Country/lang", value: "All countries" },
+            { label: "Country", value: scopeLabel(activeCountry) },
           ],
         });
       })
@@ -214,10 +214,10 @@ export function TagBubbleChart() {
             <>
               <strong>{insight.map((t) => t.tag).join(" + ")}</strong> deliver{" "}
               <strong>{insight.map((t) => formatPct(t.uplift)).join(" / ")}</strong> uplift in{" "}
-              {category === "All" ? "the dataset" : category}, despite lower frequency.
+              {category === "All" ? `the ${scopeLabel(activeCountry)} dataset` : `${category} (${scopeLabel(activeCountry)})`}, despite lower frequency.
             </>
           ) : (
-            <>No tags break out in {category === "All" ? "the dataset" : category}. Performance is even across labels.</>
+            <>No tags break out in {category === "All" ? `the ${scopeLabel(activeCountry)} dataset` : `${category} (${scopeLabel(activeCountry)})`}. Performance is even across labels.</>
           )}
         </InsightCallout>
       </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as d3 from "d3";
 import { useDataset } from "../../data/useDataset";
 import { useFilters } from "../../data/filterStore";
+import { resolvedCountry, scopedRows, scopeLabel } from "../../data/scope";
 import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
 import { InsightCallout } from "./_shared/InsightCallout";
@@ -22,15 +23,20 @@ export function EmojiBarChart() {
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("emoji");
   const { data: emojiTop } = useDataset("emojiTop");
-  const { category } = useFilters();
+  const { category, country } = useFilters();
 
   const rows = useMemo(() => {
-    if (!data) return [];
-    const filtered = data.filter((d) => d.category === category);
+    const filtered = scopedRows(data, category, country);
     return [false, true].map((flag) => filtered.find((d) => d.hasEmoji === flag)).filter(Boolean);
-  }, [data, category]);
+  }, [data, category, country]);
+  const activeCountry = resolvedCountry(data, country);
 
-  const topEmojis = emojiTop?.[category] ?? emojiTop?.All ?? [];
+  const topEmojis =
+    emojiTop?.[activeCountry]?.[category] ??
+    emojiTop?.All?.[category] ??
+    emojiTop?.[category] ??
+    emojiTop?.All ??
+    [];
 
   const lift = useMemo(() => {
     if (rows.length < 2) return null;
@@ -106,7 +112,7 @@ export function EmojiBarChart() {
     <>
       <div className="viz-frame-body">
         <p className="viz-note">
-          Metric: median views per video · Active category: {category === "All" ? "all categories" : category}
+          Metric: median views per video · Active scope: {category === "All" ? "all categories" : category} · {scopeLabel(activeCountry)}
         </p>
         <div className="chart-wrap emoji-wrap" ref={wrapRef}>
           <svg ref={svgRef} width="100%" height={HEIGHT} aria-label="Median views by emoji usage" />
@@ -116,13 +122,13 @@ export function EmojiBarChart() {
         <InsightCallout>
           {lift != null && lift > 0 && (
             <>
-              In {category === "All" ? "the dataset" : category}, titles with emojis earn{" "}
+              In {category === "All" ? `the ${scopeLabel(activeCountry)} dataset` : `${category} (${scopeLabel(activeCountry)})`}, titles with emojis earn{" "}
               <strong>+{lift.toFixed(0)}% more views</strong> than emoji-free titles.{" "}
             </>
           )}
           {lift != null && lift <= 0 && (
             <>
-              Emojis show <strong>no measurable lift</strong> in {category}. Skip them and lean on copy.{" "}
+              Emojis show <strong>no measurable lift</strong> in {category === "All" ? scopeLabel(activeCountry) : category}. Skip them and lean on copy.{" "}
             </>
           )}
           <span className="emoji-rec">

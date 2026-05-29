@@ -9,9 +9,9 @@ function formatCount(n) {
 }
 
 export function CategoryChips() {
-  const { category, setCategory } = useFilters();
+  const { category, country, setCategory } = useFilters();
   const { data: meta } = useDataset("meta");
-  const counts = meta?.videoCounts ?? {};
+  const counts = meta?.videoCountsByCountry?.[country] ?? meta?.videoCounts ?? {};
 
   return (
     <div className="category-chips" role="tablist" aria-label="Category filter">

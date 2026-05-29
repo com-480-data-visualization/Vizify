@@ -6,7 +6,7 @@ import { CATEGORIES, COUNTRIES } from "../src/data/constants.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
-const csvDirs = [path.join(root, "dataset"), path.join(root, "dist", "assets")];
+const csvDirs = [path.join(root, "dataset"), path.join(root, "tmp"), path.join(root, "dist", "assets")];
 const outDir = path.join(root, "public", "data");
 
 const CATEGORY_BY_ID = {
@@ -153,18 +153,40 @@ function categoryKeys() {
   return CATEGORIES;
 }
 
+function countryKeys() {
+  return COUNTRIES;
+}
+
+function scopePairs(record) {
+  return [
+    { country: "All", category: "All" },
+    { country: "All", category: record.category },
+    { country: record.country, category: "All" },
+    { country: record.country, category: record.category },
+  ];
+}
+
+function scopedRecords(records, country, category) {
+  const countryRows = country === "All" ? records : records.filter((record) => record.country === country);
+  return recordsForCategory(countryRows, category);
+}
+
+function key(...parts) {
+  return parts.join("\u001f");
+}
+
 async function loadRecords() {
   const csvInputs = [];
   for (const dir of csvDirs) {
     try {
-      const files = (await readdir(dir)).filter((file) => /^[A-Z]{2}_Trending-.*\.csv$/.test(file));
+      const files = (await readdir(dir)).filter((file) => /^[A-Z]{2}_Trending(?:-.*)?\.csv$/.test(file));
       csvInputs.push(...files.map((file) => ({ dir, file })));
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
     }
   }
   if (!csvInputs.length) {
-    throw new Error("No *_Trending-*.csv files found. Put the raw CSV files in dataset/ and rerun npm run build:data.");
+    throw new Error("No *_Trending*.csv files found. Put the raw CSV files in dataset/ or tmp/ and rerun npm run build:data.");
   }
 
   const deduped = new Map();
@@ -209,14 +231,24 @@ function recordsForCategory(records, category) {
 }
 
 function buildMeta(records) {
-  const videoCounts = Object.fromEntries(categoryKeys().map((category) => [category, 0]));
-  videoCounts.All = records.length;
-  for (const record of records) videoCounts[record.category] = (videoCounts[record.category] ?? 0) + 1;
+  const videoCountsByCountry = Object.fromEntries(
+    countryKeys().map((country) => [
+      country,
+      Object.fromEntries(categoryKeys().map((category) => [category, 0])),
+    ]),
+  );
+
+  for (const record of records) {
+    for (const { country, category } of scopePairs(record)) {
+      videoCountsByCountry[country][category] += 1;
+    }
+  }
 
   return {
     categories: CATEGORIES,
     countries: COUNTRIES,
-    videoCounts,
+    videoCounts: videoCountsByCountry.All,
+    videoCountsByCountry,
     totalVideos: records.length,
   };
 }
@@ -226,24 +258,28 @@ function buildHeatmap(records) {
   for (const record of records) {
     const dow = (record.publishedAt.getUTCDay() + 6) % 7;
     const hour = record.publishedAt.getUTCHours();
-    addMetric(sums, `All:${dow}:${hour}`, record);
-    addMetric(sums, `${record.category}:${dow}:${hour}`, record);
+    for (const { country, category } of scopePairs(record)) {
+      addMetric(sums, key(country, category, dow, hour), record);
+    }
   }
 
   const out = [];
-  for (const category of categoryKeys()) {
-    for (let dow = 0; dow < 7; dow += 1) {
-      for (let hour = 0; hour < 24; hour += 1) {
-        const item = sums.get(`${category}:${dow}:${hour}`) ?? { views: 0, likes: 0, comments: 0, n: 0 };
-        out.push({
-          category,
-          dow,
-          hour,
-          avgViews: avg(item.views, item.n),
-          avgLikes: avg(item.likes, item.n),
-          avgComments: avg(item.comments, item.n),
-          n: item.n,
-        });
+  for (const country of countryKeys()) {
+    for (const category of categoryKeys()) {
+      for (let dow = 0; dow < 7; dow += 1) {
+        for (let hour = 0; hour < 24; hour += 1) {
+          const item = sums.get(key(country, category, dow, hour)) ?? { views: 0, likes: 0, comments: 0, n: 0 };
+          out.push({
+            country,
+            category,
+            dow,
+            hour,
+            avgViews: avg(item.views, item.n),
+            avgLikes: avg(item.likes, item.n),
+            avgComments: avg(item.comments, item.n),
+            n: item.n,
+          });
+        }
       }
     }
   }
@@ -254,19 +290,21 @@ function buildEmoji(records) {
   const values = new Map();
   for (const record of records) {
     const flag = hasEmoji(record.title);
-    for (const category of ["All", record.category]) {
-      const key = `${category}:${flag}`;
-      const item = values.get(key) ?? [];
+    for (const { country, category } of scopePairs(record)) {
+      const itemKey = key(country, category, flag);
+      const item = values.get(itemKey) ?? [];
       item.push(record.views);
-      values.set(key, item);
+      values.set(itemKey, item);
     }
   }
 
-  return categoryKeys().flatMap((category) =>
-    [false, true].map((flag) => {
-      const group = values.get(`${category}:${flag}`) ?? [];
-      return { category, hasEmoji: flag, medianViews: median(group), n: group.length };
-    }),
+  return countryKeys().flatMap((country) =>
+    categoryKeys().flatMap((category) =>
+      [false, true].map((flag) => {
+        const group = values.get(key(country, category, flag)) ?? [];
+        return { country, category, hasEmoji: flag, medianViews: median(group), n: group.length };
+      }),
+    ),
   );
 }
 
@@ -275,27 +313,33 @@ function buildEmojiTop(records) {
 
   for (const record of records) {
     const emojis = [...new Set(extractEmojis(record.title))];
-    for (const category of ["All", record.category]) {
-      const catMap = byCategory.get(category) ?? new Map();
+    for (const { country, category } of scopePairs(record)) {
+      const scope = key(country, category);
+      const catMap = byCategory.get(scope) ?? new Map();
       for (const emoji of emojis) {
         const item = catMap.get(emoji) ?? { views: 0, n: 0 };
         item.views += record.views;
         item.n += 1;
         catMap.set(emoji, item);
       }
-      byCategory.set(category, catMap);
+      byCategory.set(scope, catMap);
     }
   }
 
   return Object.fromEntries(
-    categoryKeys().map((category) => {
-      const rows = Array.from(byCategory.get(category) ?? [])
-        .filter(([, item]) => item.n >= (category === "All" ? 5 : 2))
-        .sort((a, b) => avg(b[1].views, b[1].n) - avg(a[1].views, a[1].n) || b[1].n - a[1].n)
-        .slice(0, 3)
-        .map(([emoji]) => emoji);
-      return [category, rows.length ? rows : ["n/a"]];
-    }),
+    countryKeys().map((country) => [
+      country,
+      Object.fromEntries(
+        categoryKeys().map((category) => {
+          const rows = Array.from(byCategory.get(key(country, category)) ?? [])
+            .filter(([, item]) => item.n >= (category === "All" ? 5 : 2))
+            .sort((a, b) => avg(b[1].views, b[1].n) - avg(a[1].views, a[1].n) || b[1].n - a[1].n)
+            .slice(0, 3)
+            .map(([emoji]) => emoji);
+          return [category, rows.length ? rows : ["n/a"]];
+        }),
+      ),
+    ]),
   );
 }
 
@@ -304,33 +348,40 @@ function buildTags(records) {
   const tagViews = new Map();
 
   for (const record of records) {
-    addView(categoryViews, "All", record.views);
-    addView(categoryViews, record.category, record.views);
+    for (const { country, category } of scopePairs(record)) {
+      addView(categoryViews, key(country, category), record.views);
 
-    for (const tag of record.tags) {
-      addView(tagViews, `All:${tag}`, record.views);
-      addView(tagViews, `${record.category}:${tag}`, record.views);
+      for (const tag of record.tags) {
+        addView(tagViews, key(country, category, tag), record.views);
+      }
     }
   }
 
   const out = [];
-  for (const category of categoryKeys()) {
-    const categoryAvg = avg(categoryViews.get(category)?.views ?? 0, categoryViews.get(category)?.n ?? 0) || 1;
-    const minFreq = category === "All" ? 8 : 2;
-    const rows = Array.from(tagViews.entries())
-      .filter(([key, item]) => key.startsWith(`${category}:`) && item.n >= minFreq)
-      .map(([key, item]) => {
-        const tag = key.slice(category.length + 1);
-        return {
-          category,
-          tag: tag.length > 26 ? `${tag.slice(0, 23)}...` : tag,
-          freq: item.n,
-          uplift: avg(item.views, item.n) / categoryAvg - 1,
-        };
-      })
-      .sort((a, b) => b.freq - a.freq || b.uplift - a.uplift)
-      .slice(0, 60);
-    out.push(...rows);
+  for (const country of countryKeys()) {
+    for (const category of categoryKeys()) {
+      const scopeKey = key(country, category);
+      const categoryAvg = avg(categoryViews.get(scopeKey)?.views ?? 0, categoryViews.get(scopeKey)?.n ?? 0) || 1;
+      const minFreq = country === "All" && category === "All" ? 8 : 2;
+      const rows = Array.from(tagViews.entries())
+        .filter(([itemKey, item]) => {
+          const [itemCountry, itemCategory] = itemKey.split("\u001f");
+          return itemCountry === country && itemCategory === category && item.n >= minFreq;
+        })
+        .map(([itemKey, item]) => {
+          const tag = itemKey.split("\u001f").slice(2).join("\u001f");
+          return {
+            country,
+            category,
+            tag: tag.length > 26 ? `${tag.slice(0, 23)}...` : tag,
+            freq: item.n,
+            uplift: avg(item.views, item.n) / categoryAvg - 1,
+          };
+        })
+        .sort((a, b) => b.freq - a.freq || b.uplift - a.uplift)
+        .slice(0, 60);
+      out.push(...rows);
+    }
   }
   return out;
 }
@@ -340,51 +391,57 @@ function buildDescriptions(records) {
 
   for (const record of records) {
     const bucket = bucketForCount(words(record.description).length);
-    for (const category of ["All", record.category]) {
-      const key = `${category}:${bucket.label}`;
-      const item = sums.get(key) ?? { views: 0, comments: 0, n: 0 };
+    for (const { country, category } of scopePairs(record)) {
+      const itemKey = key(country, category, bucket.label);
+      const item = sums.get(itemKey) ?? { views: 0, comments: 0, n: 0 };
       item.views += record.views;
       item.comments += record.comments;
       item.n += 1;
-      sums.set(key, item);
+      sums.set(itemKey, item);
     }
   }
 
-  return categoryKeys().flatMap((category) =>
-    DESCRIPTION_BUCKETS.map((bucket) => {
-      const item = sums.get(`${category}:${bucket.label}`) ?? { views: 0, comments: 0, n: 0 };
-      return {
-        category,
-        bucket: bucket.label,
-        bucketStart: bucket.start,
-        bucketEnd: bucket.end,
-        avgComments: avg(item.comments, item.n),
-        avgViews: avg(item.views, item.n),
-        n: item.n,
-      };
-    }),
+  return countryKeys().flatMap((country) =>
+    categoryKeys().flatMap((category) =>
+      DESCRIPTION_BUCKETS.map((bucket) => {
+        const item = sums.get(key(country, category, bucket.label)) ?? { views: 0, comments: 0, n: 0 };
+        return {
+          country,
+          category,
+          bucket: bucket.label,
+          bucketStart: bucket.start,
+          bucketEnd: bucket.end,
+          avgComments: avg(item.comments, item.n),
+          avgViews: avg(item.views, item.n),
+          n: item.n,
+        };
+      }),
+    ),
   );
 }
 
 function buildTitlePatterns(records) {
   const out = [];
 
-  for (const category of categoryKeys()) {
-    const rows = recordsForCategory(records, category);
-    const checks = rows.map((record) => ({ record, patterns: titlePatternChecks(record.title) }));
+  for (const country of countryKeys()) {
+    for (const category of categoryKeys()) {
+      const rows = scopedRecords(records, country, category);
+      const checks = rows.map((record) => ({ record, patterns: titlePatternChecks(record.title) }));
 
-    for (const pattern of TITLE_PATTERNS) {
-      const withPattern = checks.filter((item) => item.patterns[pattern]);
-      const withoutPattern = checks.filter((item) => !item.patterns[pattern]);
-      const withAvg = avg(withPattern.reduce((sum, item) => sum + item.record.views, 0), withPattern.length);
-      const withoutAvg = avg(withoutPattern.reduce((sum, item) => sum + item.record.views, 0), withoutPattern.length);
+      for (const pattern of TITLE_PATTERNS) {
+        const withPattern = checks.filter((item) => item.patterns[pattern]);
+        const withoutPattern = checks.filter((item) => !item.patterns[pattern]);
+        const withAvg = avg(withPattern.reduce((sum, item) => sum + item.record.views, 0), withPattern.length);
+        const withoutAvg = avg(withoutPattern.reduce((sum, item) => sum + item.record.views, 0), withoutPattern.length);
 
-      out.push({
-        category,
-        pattern,
-        share: rows.length ? withPattern.length / rows.length : 0,
-        uplift: withAvg && withoutAvg ? withAvg / withoutAvg - 1 : 0,
-      });
+        out.push({
+          country,
+          category,
+          pattern,
+          share: rows.length ? withPattern.length / rows.length : 0,
+          uplift: withAvg && withoutAvg ? withAvg / withoutAvg - 1 : 0,
+        });
+      }
     }
   }
 
