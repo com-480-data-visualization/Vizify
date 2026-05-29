@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useDataset } from "../../data/useDataset";
 import { useFilters } from "../../data/filterStore";
-import { resolvedCountry, scopedRows, scopeLabel } from "../../data/scope";
+import { resolvedCountry, scopeLabel } from "../../data/scope";
 import { DAY_LABELS } from "../../data/constants";
 import { readColorTokens } from "./_shared/colorTokens";
 import { useResizeObserver } from "./_shared/useResizeObserver";
@@ -14,10 +14,90 @@ const MARGIN = { top: 22, right: 8, bottom: 8, left: 38 };
 const HEIGHT = 440;
 const BAR_RATIO = 0.78;
 const METRICS = [
+  { key: "n", label: "videos", tooltip: "Trending videos" },
   { key: "avgViews", label: "views", tooltip: "Avg views" },
   { key: "avgLikes", label: "likes", tooltip: "Avg likes" },
   { key: "avgComments", label: "comments", tooltip: "Avg comments" },
 ];
+const COUNTRY_UTC_OFFSET_MINUTES = {
+  "United States": -5 * 60,
+  "United Kingdom": 0,
+  Germany: 60,
+  France: 60,
+  Russia: 3 * 60,
+  Brazil: -3 * 60,
+  Mexico: -6 * 60,
+  Japan: 9 * 60,
+  "South Korea": 9 * 60,
+  India: 5 * 60 + 30,
+  Canada: -5 * 60,
+};
+
+function modulo(n, m) {
+  return ((n % m) + m) % m;
+}
+
+function localSlot(row, country) {
+  const offset = COUNTRY_UTC_OFFSET_MINUTES[country] ?? 0;
+  const localMinutes = row.hour * 60 + offset;
+  const dayShift = Math.floor(localMinutes / (24 * 60));
+  return {
+    dow: modulo(row.dow + dayShift, 7),
+    hour: Math.floor(modulo(localMinutes, 24 * 60) / 60),
+  };
+}
+
+function combineRowsByLocalTime(sourceRows, outputCountry, category) {
+  const grouped = new Map();
+
+  for (const row of sourceRows) {
+    const { dow, hour } = localSlot(row, row.country);
+    const key = `${dow}-${hour}`;
+    const item = grouped.get(key) ?? {
+      country: outputCountry,
+      category,
+      dow,
+      hour,
+      views: 0,
+      likes: 0,
+      comments: 0,
+      n: 0,
+    };
+
+    item.views += row.avgViews * row.n;
+    item.likes += row.avgLikes * row.n;
+    item.comments += row.avgComments * row.n;
+    item.n += row.n;
+    grouped.set(key, item);
+  }
+
+  return DAY_LABELS.flatMap((_, dow) =>
+    d3.range(24).map((hour) => {
+      const item = grouped.get(`${dow}-${hour}`);
+      const n = item?.n ?? 0;
+      return {
+        country: outputCountry,
+        category,
+        dow,
+        hour,
+        avgViews: n ? item.views / n : 0,
+        avgLikes: n ? item.likes / n : 0,
+        avgComments: n ? item.comments / n : 0,
+        n,
+      };
+    }),
+  );
+}
+
+function localHeatmapRows(data, category, country) {
+  if (!data) return [];
+  const sourceRows =
+    country === "All"
+      ? data.filter((row) => row.country !== "All" && row.category === category)
+      : data.filter((row) => row.country === country && row.category === category);
+
+  return combineRowsByLocalTime(sourceRows, country, category);
+}
 
 function formatViews(n) {
   if (n == null) return "-";
@@ -26,20 +106,25 @@ function formatViews(n) {
   return n.toLocaleString();
 }
 
+function formatMetricValue(n, metric) {
+  if (metric === "n") return `${n.toLocaleString()} videos`;
+  return `${formatViews(n)} ${METRICS.find((item) => item.key === metric)?.label}`;
+}
+
 export function HeatmapChart() {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const { width } = useResizeObserver(wrapRef);
   const { data } = useDataset("heatmap");
   const { category, country } = useFilters();
-  const [metric, setMetric] = useState("avgViews");
+  const [metric, setMetric] = useState("n");
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, header: "", rows: [] });
 
-  const rows = useMemo(
-    () => scopedRows(data, category, country),
-    [data, category, country],
-  );
   const activeCountry = resolvedCountry(data, country);
+  const rows = useMemo(
+    () => localHeatmapRows(data, category, activeCountry),
+    [data, category, activeCountry],
+  );
 
   const insight = useMemo(() => {
     if (!rows.length) return null;
@@ -116,7 +201,7 @@ export function HeatmapChart() {
           y: py + 12,
           header: d.category,
           rows: [
-            { label: "Slot", value: `${DAY_LABELS[d.dow]} · ${String(d.hour).padStart(2, "0")}:00 UTC` },
+            { label: "Slot", value: `${DAY_LABELS[d.dow]} · ${String(d.hour).padStart(2, "0")}:00 local publish time` },
             { label: "Sample size", value: d.n.toLocaleString() },
             { label: "Avg views", value: d.avgViews.toLocaleString() },
             { label: "Avg likes", value: d.avgLikes.toLocaleString() },
@@ -179,6 +264,9 @@ export function HeatmapChart() {
             </div>
           </div>
         </div>
+        <p className="viz-note">
+          Videos mode counts trending videos by local publish slot; engagement modes are averages and can be outlier-heavy.
+        </p>
         <div className="chart-wrap heatmap-wrap" ref={wrapRef}>
           <svg ref={svgRef} width="100%" height={HEIGHT} aria-label="Time-based performance heatmap" />
           <Tooltip {...tooltip} />
@@ -187,7 +275,11 @@ export function HeatmapChart() {
           <GradientLegend
             lowLabel="LOW"
             highLabel="HIGH"
-            note={`DARKER RED = HIGHER AVERAGE ${METRICS.find((item) => item.key === metric)?.label}`}
+            note={
+              metric === "n"
+                ? "DARKER RED = MORE TRENDING VIDEOS"
+                : `DARKER RED = HIGHER AVERAGE ${METRICS.find((item) => item.key === metric)?.label}`
+            }
           />
         </div>
       </div>
@@ -196,9 +288,17 @@ export function HeatmapChart() {
           <InsightCallout>
             {category === "All" ? `Overall in ${scopeLabel(activeCountry)}` : `${category} in ${scopeLabel(activeCountry)}`} peaks on{" "}
             <strong>
-              {insight.day} {String(insight.hour).padStart(2, "0")}h UTC
+              {insight.day} {String(insight.hour).padStart(2, "0")}h local publish time
             </strong>{" "}
-            - avg <strong>{formatViews(insight.value)} {METRICS.find((item) => item.key === metric)?.label}</strong> per video.
+            {metric === "n" ? (
+              <>
+                - <strong>{formatMetricValue(insight.value, metric)}</strong> in this slot.
+              </>
+            ) : (
+              <>
+                - avg <strong>{formatMetricValue(insight.value, metric)}</strong> per video.
+              </>
+            )}
           </InsightCallout>
         </div>
       )}

@@ -19,9 +19,9 @@ function formatCount(n) {
 export function VizSection({ id, eyebrow, title, intro, withChips = true, children }) {
   const { data: meta } = useDataset("meta");
   const { country } = useFilters();
-  const totalVideos = meta?.totalVideos;
   const countryCount = (meta?.countries?.length ?? 1) - 1; // minus "All"
   const visibleCountry = meta?.videoCountsByCountry?.[country] ? country : "All";
+  const videosAnalyzed = meta?.videoCountsByCountry?.[visibleCountry]?.All ?? meta?.totalVideos;
 
   return (
     <section className="viz-section" id={id}>
@@ -32,7 +32,7 @@ export function VizSection({ id, eyebrow, title, intro, withChips = true, childr
           {intro && <p>{intro}</p>}
         </div>
         <div className="viz-meta">
-          <span className="viz-meta-number">{formatCount(totalVideos)}</span>
+          <span className="viz-meta-number">{formatCount(videosAnalyzed)}</span>
           <span className="viz-meta-caption">
             videos analyzed
             {visibleCountry === "All" && countryCount > 0 ? ` · across ${countryCount} countries` : ` · ${scopeLabel(visibleCountry)}`}

@@ -212,6 +212,9 @@ export function TitlePatternGrid() {
               rows: [
                 { label: "Used by", value: `${(cell.share * 100).toFixed(0)}% of videos` },
                 { label: "Avg uplift", value: formatPct(cell.uplift) },
+                ...(row.pattern === "Clickbait"
+                  ? [{ label: "Meaning", value: "Curiosity-heavy words like shocking, secret, or must watch." }]
+                  : []),
               ],
             });
           })

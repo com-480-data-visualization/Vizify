@@ -11,7 +11,7 @@ import { TitlePatternGrid } from "./components/charts/TitlePatternGrid";
 const keyQuestions = [
   {
     question: "When should I publish if I want the best chance of visibility?",
-    answer: "Start with the publication window: compare average visibility by weekday and hour in",
+    answer: "Start with local publish timing: see when trending videos are most often published in",
     linkLabel: "publish time",
     vizIndex: 0,
   },
@@ -76,8 +76,8 @@ const vizSlides = [
     id: "viz-time",
     eyebrow: "Publish time",
     shortTitle: "Publish time",
-    title: "Best time to go viral",
-    intro: "Understand when your audience is most active and how timing influences performance on YouTube.",
+    title: "When trending videos get published",
+    intro: "Compare local publish day and hour across each country scope, then switch metrics to inspect average engagement.",
     chart: <HeatmapChart />,
   },
   {
